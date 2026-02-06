@@ -1,0 +1,5 @@
+services:
+  gowebapp:
+    image: ghcr.io/muffn/gowebapp:${TAG:-latest}
+    ports:
+      - "8080:8080"
