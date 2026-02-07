@@ -17,7 +17,7 @@ func main() {
 
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
-			"title": "GoWebApp",
+			"title": "meetkat",
 		})
 	})
 
