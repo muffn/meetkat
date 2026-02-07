@@ -1,34 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ .title }}</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f5f5f5;
-        }
-        .container {
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            color: #666;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Welcome to {{ .title }}</h1>
-        <p>Your Go web application is running.</p>
+{{template "base" .}}
+
+{{define "title"}}{{ .title }}{{end}}
+
+{{define "content"}}
+<div class="flex items-center justify-center h-screen bg-gray-100">
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-gray-800">Welcome to {{ .title }}</h1>
+        <p class="mt-2 text-gray-500">Your Go web application is running.</p>
     </div>
-</body>
-</html>
+</div>
+{{end}}

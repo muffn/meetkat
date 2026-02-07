@@ -20,6 +20,10 @@ vendor/
 *.iml
 .vscode/
 
+# Air (hot reload)
+.air.toml
+tmp/
+
 # OS
 .DS_Store
 Thumbs.db

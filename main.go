@@ -1,6 +1,7 @@
 package main
 
 import (
+	"html/template"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,7 +9,11 @@ import (
 
 func main() {
 	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
+	tmpl := template.Must(template.ParseFiles(
+		"templates/layouts/base.html",
+		"templates/index.html",
+	))
+	r.SetHTMLTemplate(tmpl)
 
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{
