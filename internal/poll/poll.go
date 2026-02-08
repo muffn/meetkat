@@ -22,13 +22,13 @@ type Poll struct {
 	CreatedAt time.Time
 }
 
-type PollService struct {
+type Service struct {
 	mu    sync.Mutex
 	polls map[string]*Poll
 }
 
-func NewPollService() *PollService {
-	return &PollService{
+func NewService() *Service {
+	return &Service{
 		polls: make(map[string]*Poll),
 	}
 }
@@ -41,7 +41,7 @@ func generateID() string {
 	return string(b)
 }
 
-func (s *PollService) Create(title string, options []string) *Poll {
+func (s *Service) Create(title string, options []string) *Poll {
 	id := generateID()
 	p := &Poll{
 		ID:        id,
@@ -55,14 +55,14 @@ func (s *PollService) Create(title string, options []string) *Poll {
 	return p
 }
 
-func (s *PollService) Get(id string) (*Poll, bool) {
+func (s *Service) Get(id string) (*Poll, bool) {
 	s.mu.Lock()
 	p, ok := s.polls[id]
 	s.mu.Unlock()
 	return p, ok
 }
 
-func (s *PollService) AddVote(pollID, name string, responses map[string]bool) error {
+func (s *Service) AddVote(pollID, name string, responses map[string]bool) error {
 	if name == "" {
 		return errors.New("name must not be empty")
 	}

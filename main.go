@@ -27,7 +27,7 @@ func loadTemplates() map[string]*template.Template {
 }
 
 func main() {
-	svc := poll.NewPollService()
+	svc := poll.NewService()
 	tmpls := loadTemplates()
 	h := handler.NewPollHandler(svc, tmpls)
 

@@ -6,7 +6,7 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	svc := NewPollService()
+	svc := NewService()
 	p := svc.Create("Dinner", []string{"Mon", "Tue"})
 
 	if p.ID == "" {
@@ -24,7 +24,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	svc := NewPollService()
+	svc := NewService()
 	created := svc.Create("Lunch", []string{"Wed"})
 
 	got, ok := svc.Get(created.ID)
@@ -37,7 +37,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestGetNotFound(t *testing.T) {
-	svc := NewPollService()
+	svc := NewService()
 	_, ok := svc.Get("doesnotexist")
 	if ok {
 		t.Fatal("expected poll not to be found")
@@ -45,7 +45,7 @@ func TestGetNotFound(t *testing.T) {
 }
 
 func TestAddVote(t *testing.T) {
-	svc := NewPollService()
+	svc := NewService()
 	p := svc.Create("Offsite", []string{"Mon", "Tue"})
 
 	err := svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
@@ -69,7 +69,7 @@ func TestAddVote(t *testing.T) {
 }
 
 func TestAddVoteEmptyName(t *testing.T) {
-	svc := NewPollService()
+	svc := NewService()
 	p := svc.Create("Test", []string{"A"})
 
 	err := svc.AddVote(p.ID, "", map[string]bool{"A": true})
@@ -82,7 +82,7 @@ func TestAddVoteEmptyName(t *testing.T) {
 }
 
 func TestAddVoteNonexistentPoll(t *testing.T) {
-	svc := NewPollService()
+	svc := NewService()
 
 	err := svc.AddVote("nope", "Alice", map[string]bool{})
 	if err == nil {

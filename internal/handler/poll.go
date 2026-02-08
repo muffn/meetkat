@@ -13,11 +13,11 @@ import (
 )
 
 type PollHandler struct {
-	svc   *poll.PollService
+	svc   *poll.Service
 	tmpls map[string]*template.Template
 }
 
-func NewPollHandler(svc *poll.PollService, tmpls map[string]*template.Template) *PollHandler {
+func NewPollHandler(svc *poll.Service, tmpls map[string]*template.Template) *PollHandler {
 	return &PollHandler{svc: svc, tmpls: tmpls}
 }
 
