@@ -76,12 +76,18 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", p.ID))
 }
 
+func (h *PollHandler) renderNotFound(c *gin.Context) {
+	h.renderHTML(c, http.StatusNotFound, "404.html", gin.H{
+		"title": "Poll Not Found – meetkat",
+	})
+}
+
 func (h *PollHandler) ShowPoll(c *gin.Context) {
 	id := c.Param("id")
 
 	p, ok := h.svc.Get(id)
 	if !ok {
-		c.String(http.StatusNotFound, "Poll not found")
+		h.renderNotFound(c)
 		return
 	}
 
@@ -99,7 +105,7 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 
 	p, ok := h.svc.Get(id)
 	if !ok {
-		c.String(http.StatusNotFound, "Poll not found")
+		h.renderNotFound(c)
 		return
 	}
 

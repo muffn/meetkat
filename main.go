@@ -17,6 +17,7 @@ func loadTemplates() map[string]*template.Template {
 		"index.html": "templates/index.html",
 		"new.html":   "templates/new.html",
 		"poll.html":  "templates/poll.html",
+		"404.html":   "templates/404.html",
 	}
 
 	tmpls := make(map[string]*template.Template, len(pages))
