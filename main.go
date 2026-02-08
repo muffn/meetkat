@@ -111,12 +111,10 @@ func main() {
 
 		if len(errors) > 0 {
 			renderHTML(c, tmpls, http.StatusUnprocessableEntity, "new.html", gin.H{
-				"title":  "Create a Poll – meetkat",
-				"errors": errors,
-				"form": gin.H{
-					"title": title,
-					"dates": dates,
-				},
+				"title":     "Create a Poll – meetkat",
+				"errors":    errors,
+				"formTitle": title,
+				"formDates": dates,
 			})
 			return
 		}
