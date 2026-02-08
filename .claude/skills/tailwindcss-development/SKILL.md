@@ -19,24 +19,35 @@ Activate this skill when:
 - Extracting repeated patterns into components
 - Debugging spacing or layout issues
 
-## Documentation
+## Project Setup
 
-Use `search-docs` for detailed Tailwind CSS v4 patterns and documentation.
+This project uses **Tailwind CSS v4** with a build step via `@tailwindcss/cli`. No CDN.
+
+- **Source CSS**: `static/css/input.css` — contains `@import "tailwindcss"`, `@theme`, `@variant`, and CSS variables
+- **Compiled CSS**: `static/css/style.css` — generated output (gitignored)
+- **Build**: `npm run build:css` (minified) / `npm run dev:css` (watch mode)
+- **Config**: CSS-first via `@theme` in `input.css` (no `tailwind.config.js`)
+- **Dark mode**: Class-based via `@variant dark (&:where(.dark, .dark *));`
+- **Templating**: Go `html/template` with `{{define}}`, `{{template}}`, `{{block}}` directives
+- **Templates**: `templates/layouts/base.html` (base layout), `templates/*.html` (pages)
+- **Static serving**: Gin serves `/static` from `./static` directory
 
 ## Basic Usage
 
-- Use Tailwind CSS classes to style HTML. Check and follow existing Tailwind conventions in the project before introducing new patterns.
-- Offer to extract repeated patterns into components that match the project's conventions (e.g., Blade, JSX, Vue).
+- Use Tailwind CSS v4 utility classes to style HTML. Check and follow existing conventions in the project before introducing new patterns.
+- Offer to extract repeated patterns into Go template blocks or partials that match the project's conventions.
 - Consider class placement, order, priority, and defaults. Remove redundant classes, add classes to parent or child elements carefully to reduce repetition, and group elements logically.
+- After modifying templates, run `npm run build:css` to regenerate the compiled CSS.
 
 ## Tailwind CSS v4 Specifics
 
 - Always use Tailwind CSS v4 and avoid deprecated utilities.
-- `corePlugins` is not supported in Tailwind v4.
+- `corePlugins` and `tailwind.config.js` are not supported in Tailwind v4.
+- `@apply` is available (build-based setup supports it).
 
 ### CSS-First Configuration
 
-In Tailwind v4, configuration is CSS-first using the `@theme` directive — no separate `tailwind.config.js` file is needed:
+In Tailwind v4, configuration is CSS-first using the `@theme` directive in `static/css/input.css`:
 
 <code-snippet name="CSS-First Config" lang="css">
 @theme {
@@ -73,6 +84,57 @@ Tailwind v4 removed deprecated utilities. Use the replacements shown below. Opac
 | decoration-slice | box-decoration-slice |
 | decoration-clone | box-decoration-clone |
 
+## Theme System
+
+This project uses a **CSS variable-based OKLCH color theme** with 5 semantic color scales, each with shades 50–950:
+
+| Scale | Purpose |
+|-------|---------|
+| `text` | Text/foreground colors |
+| `background` | Page and surface backgrounds |
+| `primary` | Primary brand/action color |
+| `secondary` | Supporting/complementary color |
+| `accent` | Highlights and calls to attention |
+
+### How It Works
+
+1. CSS custom properties (e.g. `--text-50`, `--background-900`) hold OKLCH color parameters
+2. `:root` defines light mode values, `.dark` defines dark mode values (scales are inverted)
+3. `@theme` registers these as Tailwind colors via `--color-*` tokens referencing the variables
+4. Tailwind generates utilities like `bg-background-50`, `text-text-900`, `border-primary-500`
+
+### Usage Examples
+
+<code-snippet name="Theme Colors" lang="html">
+<!-- Page background — adapts to light/dark automatically -->
+<div class="bg-background-50">
+
+<!-- Heading text — adapts automatically -->
+<h1 class="text-text-900">
+
+<!-- Button with primary color -->
+<button class="bg-primary-500 text-white">
+
+<!-- Accent border -->
+<div class="border border-accent-400">
+</code-snippet>
+
+## Dark Mode
+
+Dark mode is handled **automatically** by the CSS variable system. The `:root` and `.dark` selectors swap the OKLCH values for each color scale, so a single class handles both modes:
+
+<code-snippet name="Dark Mode — Correct" lang="html">
+<!-- CORRECT: CSS variables handle the light/dark swap -->
+<div class="bg-background-50 text-text-900">
+</code-snippet>
+
+<code-snippet name="Dark Mode — Unnecessary" lang="html">
+<!-- UNNECESSARY: dark: prefix is redundant for themed colors -->
+<div class="bg-background-50 dark:bg-background-950 text-text-900 dark:text-text-50">
+</code-snippet>
+
+Only use the `dark:` variant when you need a fundamentally different style in dark mode that the CSS variable swap doesn't cover (e.g. a different shadow, or a non-themed color like `bg-white dark:bg-background-300`).
+
 ## Spacing
 
 Use `gap` utilities instead of margins for spacing between siblings:
@@ -81,16 +143,6 @@ Use `gap` utilities instead of margins for spacing between siblings:
 <div class="flex gap-8">
     <div>Item 1</div>
     <div>Item 2</div>
-</div>
-</code-snippet>
-
-## Dark Mode
-
-If existing pages and components support dark mode, new pages and components must support it the same way, typically using the `dark:` variant:
-
-<code-snippet name="Dark Mode" lang="html">
-<div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-    Content adapts to color scheme
 </div>
 </code-snippet>
 
@@ -121,4 +173,5 @@ If existing pages and components support dark mode, new pages and components mus
 - Using `@tailwind` directives instead of `@import "tailwindcss"`
 - Trying to use `tailwind.config.js` instead of CSS `@theme` directive
 - Using margins for spacing between siblings instead of gap utilities
-- Forgetting to add dark mode variants when the project uses dark mode
+- Adding unnecessary `dark:` prefixes for themed colors (the CSS variables already handle it)
+- Forgetting to run `npm run build:css` after modifying templates or `input.css`
