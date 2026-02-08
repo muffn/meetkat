@@ -4,7 +4,7 @@
 
 {{define "content"}}
 <section class="min-h-screen bg-background-50 px-4 py-12 sm:px-6">
-    <div class="mx-auto max-w-xl">
+    <div class="mx-auto max-w-2xl">
         <a href="/" class="inline-flex items-center gap-1 text-sm font-medium text-text-500 transition hover:text-primary-500">
             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd"/>
@@ -13,6 +13,7 @@
         </a>
 
         <div class="mt-6 rounded-xl border border-background-200 bg-white p-6 shadow-sm dark:border-background-200 dark:bg-background-100">
+            <!-- Poll header -->
             <div class="mb-6">
                 <span class="inline-block rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-700">
                     Poll
@@ -21,19 +22,97 @@
                 <p class="mt-1 text-sm text-text-500">Created {{ .poll.CreatedAt.Format "Jan 2, 2006" }}</p>
             </div>
 
-            <div class="space-y-3">
-                <h2 class="text-sm font-medium text-text-700">Date Options</h2>
-                {{range .poll.Options}}
-                <div class="flex items-center gap-3 rounded-lg border border-background-200 bg-background-50 px-4 py-3">
-                    <svg class="size-5 shrink-0 text-primary-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="text-sm font-medium text-text-800">{{ . }}</span>
+            <!-- Results table (shown when votes exist) -->
+            {{if .poll.Votes}}
+            <div class="mb-8">
+                <h2 class="mb-3 text-sm font-medium text-text-700">Responses</h2>
+                <div class="overflow-x-auto rounded-lg border border-background-200">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-background-200 bg-background-50">
+                                <th class="px-4 py-3 text-left font-medium text-text-600">Name</th>
+                                {{range .poll.Options}}
+                                <th class="px-4 py-3 text-center font-medium text-text-600">{{ . }}</th>
+                                {{end}}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .poll.Votes}}
+                            <tr class="border-b border-background-100">
+                                <td class="px-4 py-3 font-medium text-text-800">{{ .Name }}</td>
+                                {{$responses := .Responses}}
+                                {{range $.poll.Options}}
+                                <td class="px-4 py-3 text-center">
+                                    {{if index $responses .}}
+                                    <span class="inline-flex size-6 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </span>
+                                    {{else}}
+                                    <span class="inline-flex size-6 items-center justify-center rounded-full bg-red-100 text-red-500">
+                                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                                        </svg>
+                                    </span>
+                                    {{end}}
+                                </td>
+                                {{end}}
+                            </tr>
+                            {{end}}
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-background-50">
+                                <td class="px-4 py-3 text-sm font-semibold text-text-700">Total</td>
+                                {{range .poll.Options}}
+                                <td class="px-4 py-3 text-center text-sm font-semibold text-primary-600">
+                                    {{index $.totals .}}
+                                </td>
+                                {{end}}
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            {{end}}
+
+            <!-- Vote form -->
+            <div class="mb-8">
+                <h2 class="mb-3 text-sm font-medium text-text-700">Cast your vote</h2>
+                {{if .voteError}}
+                <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {{ .voteError }}
                 </div>
                 {{end}}
+                <form method="POST" action="/poll/{{ .poll.ID }}/vote" class="space-y-4">
+                    <div>
+                        <label for="name" class="mb-1 block text-sm font-medium text-text-700">Your name</label>
+                        <input type="text" id="name" name="name" placeholder="e.g. Alice"
+                               class="block w-full rounded-lg border border-background-300 bg-white px-3 py-2 text-sm text-text-800 placeholder-text-400 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:bg-background-100">
+                    </div>
+                    <fieldset>
+                        <legend class="mb-2 text-sm font-medium text-text-700">Select dates you're available</legend>
+                        <div class="space-y-2">
+                            {{range .poll.Options}}
+                            <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-background-200 bg-background-50 px-4 py-3 transition hover:border-primary-300 hover:bg-primary-50">
+                                <input type="checkbox" name="vote-{{ . }}" class="size-4 rounded border-background-300 text-primary-500 focus:ring-primary-400">
+                                <svg class="size-5 shrink-0 text-primary-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-sm font-medium text-text-800">{{ . }}</span>
+                            </label>
+                            {{end}}
+                        </div>
+                    </fieldset>
+                    <button type="submit"
+                            class="w-full rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-600 focus:ring-2 focus:ring-primary-300">
+                        Submit Vote
+                    </button>
+                </form>
             </div>
 
-            <div class="mt-8 rounded-lg border border-background-200 bg-background-50 p-4">
+            <!-- Share section -->
+            <div class="rounded-lg border border-background-200 bg-background-50 p-4">
                 <h2 class="text-sm font-medium text-text-700">Share this poll</h2>
                 <p class="mt-1 text-xs text-text-400">Send this link to participants so they can vote.</p>
                 <div class="mt-2 flex items-center gap-2">

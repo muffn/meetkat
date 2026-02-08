@@ -13,10 +13,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Vote struct {
+	Name      string
+	Responses map[string]bool // key = date option string, value = available
+}
+
 type Poll struct {
 	ID        string
 	Title     string
 	Options   []string
+	Votes     []Vote
 	CreatedAt time.Time
 }
 
@@ -142,11 +148,67 @@ func main() {
 			return
 		}
 
+		// Compute per-option vote totals.
+		totals := make(map[string]int, len(poll.Options))
+		for _, opt := range poll.Options {
+			for _, v := range poll.Votes {
+				if v.Responses[opt] {
+					totals[opt]++
+				}
+			}
+		}
+
 		renderHTML(c, tmpls, http.StatusOK, "poll.html", gin.H{
-			"title": poll.Title + " – meetkat",
-			"poll":  poll,
-			"url":   fmt.Sprintf("%s/poll/%s", c.Request.Host, poll.ID),
+			"title":  poll.Title + " – meetkat",
+			"poll":   poll,
+			"totals": totals,
+			"url":    fmt.Sprintf("%s/poll/%s", c.Request.Host, poll.ID),
 		})
+	})
+
+	r.POST("/poll/:id/vote", func(c *gin.Context) {
+		id := c.Param("id")
+
+		pollsMu.Lock()
+		poll, ok := polls[id]
+		pollsMu.Unlock()
+
+		if !ok {
+			c.String(http.StatusNotFound, "Poll not found")
+			return
+		}
+
+		name := strings.TrimSpace(c.PostForm("name"))
+		if name == "" {
+			// Re-render with validation error.
+			totals := make(map[string]int, len(poll.Options))
+			for _, opt := range poll.Options {
+				for _, v := range poll.Votes {
+					if v.Responses[opt] {
+						totals[opt]++
+					}
+				}
+			}
+			renderHTML(c, tmpls, http.StatusUnprocessableEntity, "poll.html", gin.H{
+				"title":     poll.Title + " – meetkat",
+				"poll":      poll,
+				"totals":    totals,
+				"url":       fmt.Sprintf("%s/poll/%s", c.Request.Host, poll.ID),
+				"voteError": "Please enter your name.",
+			})
+			return
+		}
+
+		responses := make(map[string]bool, len(poll.Options))
+		for _, opt := range poll.Options {
+			responses[opt] = c.PostForm("vote-"+opt) == "on"
+		}
+
+		pollsMu.Lock()
+		poll.Votes = append(poll.Votes, Vote{Name: name, Responses: responses})
+		pollsMu.Unlock()
+
+		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", id))
 	})
 
 	log.Fatal(r.Run(":8080"))
