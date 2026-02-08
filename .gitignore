@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-gowebapp
+meetkat
 
 # Test binary
 *.test
