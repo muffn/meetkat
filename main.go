@@ -201,7 +201,7 @@ func main() {
 
 		responses := make(map[string]bool, len(poll.Options))
 		for _, opt := range poll.Options {
-			responses[opt] = c.PostForm("vote-"+opt) == "on"
+			responses[opt] = c.PostForm("vote-"+opt) == "yes"
 		}
 
 		pollsMu.Lock()
