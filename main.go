@@ -14,6 +14,7 @@ func main() {
 		"templates/index.html",
 	))
 	r.SetHTMLTemplate(tmpl)
+	r.Static("/static", "./static")
 
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{

@@ -24,6 +24,12 @@ vendor/
 .air.toml
 tmp/
 
+# Node
+node_modules/
+
+# Tailwind CSS (compiled output)
+static/css/style.css
+
 # OS
 .DS_Store
 Thumbs.db

@@ -1,3 +1,14 @@
+FROM node:22-alpine AS css
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY static/css/input.css ./static/css/
+COPY templates/ ./templates/
+RUN npx @tailwindcss/cli -i static/css/input.css -o static/css/style.css --minify
+
 FROM golang:1.25-alpine AS build
 
 WORKDIR /app
@@ -14,6 +25,7 @@ WORKDIR /app
 
 COPY --from=build /app/gowebapp .
 COPY --from=build /app/templates/ ./templates/
+COPY --from=css /app/static/css/style.css ./static/css/
 
 EXPOSE 8080
 
