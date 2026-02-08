@@ -2,6 +2,7 @@ package main
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,5 +23,5 @@ func main() {
 		})
 	})
 
-	r.Run(":8080")
+	log.Fatal(r.Run(":8080"))
 }
