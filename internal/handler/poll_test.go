@@ -55,7 +55,7 @@ func postForm(router http.Handler, path string, form url.Values) *httptest.Respo
 
 // seedPoll creates a poll directly via the service for testing.
 func seedPoll(svc *poll.Service, title string, options []string) *poll.Poll {
-	return svc.Create(title, options)
+	return svc.Create(title, "", options)
 }
 
 func TestVoteSubmission(t *testing.T) {

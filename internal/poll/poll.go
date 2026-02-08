@@ -15,11 +15,12 @@ type Vote struct {
 }
 
 type Poll struct {
-	ID        string
-	Title     string
-	Options   []string
-	Votes     []Vote
-	CreatedAt time.Time
+	ID          string
+	Title       string
+	Description string
+	Options     []string
+	Votes       []Vote
+	CreatedAt   time.Time
 }
 
 type Service struct {
@@ -41,13 +42,14 @@ func generateID() string {
 	return string(b)
 }
 
-func (s *Service) Create(title string, options []string) *Poll {
+func (s *Service) Create(title, description string, options []string) *Poll {
 	id := generateID()
 	p := &Poll{
-		ID:        id,
-		Title:     title,
-		Options:   options,
-		CreatedAt: time.Now(),
+		ID:          id,
+		Title:       title,
+		Description: description,
+		Options:     options,
+		CreatedAt:   time.Now(),
 	}
 	s.mu.Lock()
 	s.polls[id] = p

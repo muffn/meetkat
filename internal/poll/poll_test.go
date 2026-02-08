@@ -7,7 +7,7 @@ import (
 
 func TestCreate(t *testing.T) {
 	svc := NewService()
-	p := svc.Create("Dinner", []string{"Mon", "Tue"})
+	p := svc.Create("Dinner", "Pick your evening", []string{"Mon", "Tue"})
 
 	if p.ID == "" {
 		t.Fatal("expected non-empty ID")
@@ -18,6 +18,9 @@ func TestCreate(t *testing.T) {
 	if p.Title != "Dinner" {
 		t.Errorf("expected title Dinner, got %q", p.Title)
 	}
+	if p.Description != "Pick your evening" {
+		t.Errorf("expected description %q, got %q", "Pick your evening", p.Description)
+	}
 	if len(p.Options) != 2 {
 		t.Fatalf("expected 2 options, got %d", len(p.Options))
 	}
@@ -25,7 +28,7 @@ func TestCreate(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	svc := NewService()
-	created := svc.Create("Lunch", []string{"Wed"})
+	created := svc.Create("Lunch", "", []string{"Wed"})
 
 	got, ok := svc.Get(created.ID)
 	if !ok {
@@ -46,7 +49,7 @@ func TestGetNotFound(t *testing.T) {
 
 func TestAddVote(t *testing.T) {
 	svc := NewService()
-	p := svc.Create("Offsite", []string{"Mon", "Tue"})
+	p := svc.Create("Offsite", "", []string{"Mon", "Tue"})
 
 	err := svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
 	if err != nil {
@@ -70,7 +73,7 @@ func TestAddVote(t *testing.T) {
 
 func TestAddVoteEmptyName(t *testing.T) {
 	svc := NewService()
-	p := svc.Create("Test", []string{"A"})
+	p := svc.Create("Test", "", []string{"A"})
 
 	err := svc.AddVote(p.ID, "", map[string]bool{"A": true})
 	if err == nil {

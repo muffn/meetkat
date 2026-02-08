@@ -42,6 +42,7 @@ func (h *PollHandler) ShowNew(c *gin.Context) {
 
 func (h *PollHandler) CreatePoll(c *gin.Context) {
 	title := strings.TrimSpace(c.PostForm("title"))
+	description := strings.TrimSpace(c.PostForm("description"))
 	dates := c.PostFormArray("dates[]")
 
 	var options []string
@@ -62,15 +63,16 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 
 	if len(errors) > 0 {
 		h.renderHTML(c, http.StatusUnprocessableEntity, "new.html", gin.H{
-			"title":     "Create a Poll – meetkat",
-			"errors":    errors,
-			"formTitle": title,
-			"formDates": dates,
+			"title":           "Create a Poll – meetkat",
+			"errors":          errors,
+			"formTitle":       title,
+			"formDescription": description,
+			"formDates":       dates,
 		})
 		return
 	}
 
-	p := h.svc.Create(title, options)
+	p := h.svc.Create(title, description, options)
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", p.ID))
 }
 

@@ -19,6 +19,9 @@
                     Poll
                 </span>
                 <h1 class="mt-3 text-2xl font-bold text-text-900">{{ .poll.Title }}</h1>
+                {{if .poll.Description}}
+                <p class="mt-3 rounded-lg border-l-4 border-primary-300 bg-background-50 px-4 py-3 text-sm text-text-700">{{ .poll.Description }}</p>
+                {{end}}
                 <p class="mt-1 text-sm text-text-500">Created {{ .poll.CreatedAt.Format "Jan 2, 2006" }}</p>
             </div>
 
