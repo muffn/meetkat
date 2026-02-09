@@ -6,8 +6,11 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	svc := NewService()
-	p := svc.Create("Dinner", "Pick your evening", []string{"Mon", "Tue"})
+	svc := NewService(NewMemoryRepository())
+	p, err := svc.Create("Dinner", "Pick your evening", []string{"Mon", "Tue"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if p.ID == "" {
 		t.Fatal("expected non-empty ID")
@@ -27,11 +30,17 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	svc := NewService()
-	created := svc.Create("Lunch", "", []string{"Wed"})
+	svc := NewService(NewMemoryRepository())
+	created, err := svc.Create("Lunch", "", []string{"Wed"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-	got, ok := svc.Get(created.ID)
-	if !ok {
+	got, err := svc.Get(created.ID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got == nil {
 		t.Fatal("expected poll to be found")
 	}
 	if got.Title != "Lunch" {
@@ -40,18 +49,24 @@ func TestGet(t *testing.T) {
 }
 
 func TestGetNotFound(t *testing.T) {
-	svc := NewService()
-	_, ok := svc.Get("doesnotexist")
-	if ok {
+	svc := NewService(NewMemoryRepository())
+	got, err := svc.Get("doesnotexist")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
 		t.Fatal("expected poll not to be found")
 	}
 }
 
 func TestAddVote(t *testing.T) {
-	svc := NewService()
-	p := svc.Create("Offsite", "", []string{"Mon", "Tue"})
+	svc := NewService(NewMemoryRepository())
+	p, err := svc.Create("Offsite", "", []string{"Mon", "Tue"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-	err := svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
+	err = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -72,8 +87,8 @@ func TestAddVote(t *testing.T) {
 }
 
 func TestAddVoteEmptyName(t *testing.T) {
-	svc := NewService()
-	p := svc.Create("Test", "", []string{"A"})
+	svc := NewService(NewMemoryRepository())
+	p, _ := svc.Create("Test", "", []string{"A"})
 
 	err := svc.AddVote(p.ID, "", map[string]bool{"A": true})
 	if err == nil {
@@ -85,7 +100,7 @@ func TestAddVoteEmptyName(t *testing.T) {
 }
 
 func TestAddVoteNonexistentPoll(t *testing.T) {
-	svc := NewService()
+	svc := NewService(NewMemoryRepository())
 
 	err := svc.AddVote("nope", "Alice", map[string]bool{})
 	if err == nil {

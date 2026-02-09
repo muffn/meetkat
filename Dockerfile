@@ -27,6 +27,8 @@ COPY --from=build /app/meetkat .
 COPY --from=build /app/templates/ ./templates/
 COPY --from=css /app/static/css/style.css ./static/css/
 
+RUN mkdir -p /app/data
+
 ENV GIN_MODE=release
 
 EXPOSE 8080

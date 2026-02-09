@@ -4,9 +4,12 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"meetkat/internal/handler"
 	"meetkat/internal/poll"
+	"meetkat/internal/sqlite"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,7 +31,23 @@ func loadTemplates() map[string]*template.Template {
 }
 
 func main() {
-	svc := poll.NewService()
+	dbPath := os.Getenv("MEETKAT_DB_PATH")
+	if dbPath == "" {
+		dbPath = "data/meetkat.db"
+	}
+
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0o755); err != nil {
+		log.Fatalf("create data directory: %v", err)
+	}
+
+	db, err := sqlite.Open(dbPath)
+	if err != nil {
+		log.Fatalf("open database: %v", err)
+	}
+	defer func() { _ = db.Close() }()
+
+	repo := sqlite.NewPollRepository(db)
+	svc := poll.NewService(repo)
 	tmpls := loadTemplates()
 	h := handler.NewPollHandler(svc, tmpls)
 

@@ -18,7 +18,7 @@ func init() {
 }
 
 func setupTestRouter() (*gin.Engine, *poll.Service) {
-	svc := poll.NewService()
+	svc := poll.NewService(poll.NewMemoryRepository())
 	tmpls := loadTestTemplates()
 	h := NewPollHandler(svc, tmpls)
 
@@ -56,7 +56,11 @@ func postForm(router http.Handler, path string, form url.Values) *httptest.Respo
 
 // seedPoll creates a poll directly via the service for testing.
 func seedPoll(svc *poll.Service, title string, options []string) *poll.Poll {
-	return svc.Create(title, "", options)
+	p, err := svc.Create(title, "", options)
+	if err != nil {
+		panic(err)
+	}
+	return p
 }
 
 func TestVoteSubmission(t *testing.T) {

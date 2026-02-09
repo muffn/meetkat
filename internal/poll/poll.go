@@ -2,8 +2,8 @@ package poll
 
 import (
 	"errors"
+	"fmt"
 	"math/rand/v2"
-	"sync"
 	"time"
 )
 
@@ -24,14 +24,11 @@ type Poll struct {
 }
 
 type Service struct {
-	mu    sync.Mutex
-	polls map[string]*Poll
+	repo Repository
 }
 
-func NewService() *Service {
-	return &Service{
-		polls: make(map[string]*Poll),
-	}
+func NewService(repo Repository) *Service {
+	return &Service{repo: repo}
 }
 
 func generateID() string {
@@ -42,40 +39,29 @@ func generateID() string {
 	return string(b)
 }
 
-func (s *Service) Create(title, description string, options []string) *Poll {
-	id := generateID()
+func (s *Service) Create(title, description string, options []string) (*Poll, error) {
 	p := &Poll{
-		ID:          id,
+		ID:          generateID(),
 		Title:       title,
 		Description: description,
 		Options:     options,
 		CreatedAt:   time.Now(),
 	}
-	s.mu.Lock()
-	s.polls[id] = p
-	s.mu.Unlock()
-	return p
+	if err := s.repo.Create(p); err != nil {
+		return nil, fmt.Errorf("create poll: %w", err)
+	}
+	return p, nil
 }
 
-func (s *Service) Get(id string) (*Poll, bool) {
-	s.mu.Lock()
-	p, ok := s.polls[id]
-	s.mu.Unlock()
-	return p, ok
+func (s *Service) Get(id string) (*Poll, error) {
+	return s.repo.GetByPublicID(id)
 }
 
 func (s *Service) AddVote(pollID, name string, responses map[string]bool) error {
 	if name == "" {
 		return errors.New("name must not be empty")
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	p, ok := s.polls[pollID]
-	if !ok {
-		return errors.New("poll not found")
-	}
-	p.Votes = append(p.Votes, Vote{Name: name, Responses: responses})
-	return nil
+	return s.repo.AddVote(pollID, Vote{Name: name, Responses: responses})
 }
 
 func Totals(p *Poll) map[string]int {
