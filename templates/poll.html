@@ -3,7 +3,7 @@
 {{define "title"}}{{ .title }}{{end}}
 
 {{define "content"}}
-<section class="min-h-screen bg-background-50 px-4 py-12 sm:px-6">
+<section class="min-h-dvh bg-background-50 px-4 py-12 sm:px-6">
     <div class="mx-auto max-w-2xl">
         <a href="/" class="inline-flex items-center gap-1 text-sm font-medium text-text-500 transition hover:text-primary-500">
             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
@@ -71,6 +71,7 @@
                                 <td class="px-4 py-3">
                                     <label for="vote-name" class="sr-only">Your name</label>
                                     <input type="text" id="vote-name" name="name" placeholder="Your name"
+                                           autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other"
                                            class="w-full min-w-32 rounded-md border border-background-300 bg-white px-2.5 py-1.5 text-sm text-text-800 placeholder-text-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:bg-background-100">
                                 </td>
                                 {{range .poll.Options}}
@@ -127,7 +128,7 @@
                     <label for="share-url" class="sr-only">Poll URL</label>
                     <input type="text" readonly id="share-url" value="{{ .url }}"
                            class="block w-full rounded-lg border border-background-300 bg-white px-3 py-2 text-sm text-text-700 dark:bg-background-100">
-                    <button type="button" onclick="copyURL()"
+                    <button type="button" id="copy-btn" onclick="copyURL()"
                             class="shrink-0 rounded-lg bg-primary-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-primary-600">
                         Copy
                     </button>
@@ -140,7 +141,11 @@
 <script>
 function copyURL() {
     const input = document.getElementById('share-url');
-    navigator.clipboard.writeText(input.value);
+    const btn = document.getElementById('copy-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = 'Copied!';
+        setTimeout(function () { btn.textContent = 'Copy'; }, 2000);
+    });
 }
 </script>
 {{end}}
