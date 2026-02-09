@@ -72,7 +72,12 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 		return
 	}
 
-	p := h.svc.Create(title, description, options)
+	p, err := h.svc.Create(title, description, options)
+	if err != nil {
+		log.Printf("create poll error: %v", err)
+		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		return
+	}
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", p.ID))
 }
 
@@ -85,8 +90,13 @@ func (h *PollHandler) renderNotFound(c *gin.Context) {
 func (h *PollHandler) ShowPoll(c *gin.Context) {
 	id := c.Param("id")
 
-	p, ok := h.svc.Get(id)
-	if !ok {
+	p, err := h.svc.Get(id)
+	if err != nil {
+		log.Printf("get poll error: %v", err)
+		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		return
+	}
+	if p == nil {
 		h.renderNotFound(c)
 		return
 	}
@@ -103,8 +113,13 @@ func (h *PollHandler) ShowPoll(c *gin.Context) {
 func (h *PollHandler) SubmitVote(c *gin.Context) {
 	id := c.Param("id")
 
-	p, ok := h.svc.Get(id)
-	if !ok {
+	p, err := h.svc.Get(id)
+	if err != nil {
+		log.Printf("get poll error: %v", err)
+		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		return
+	}
+	if p == nil {
 		h.renderNotFound(c)
 		return
 	}
@@ -127,8 +142,11 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 		responses[opt] = c.PostForm("vote-"+opt) == "yes"
 	}
 
-	// AddVote won't fail here: name is non-empty and poll exists.
-	_ = h.svc.AddVote(id, name, responses)
+	if err := h.svc.AddVote(id, name, responses); err != nil {
+		log.Printf("add vote error: %v", err)
+		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		return
+	}
 
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", id))
 }

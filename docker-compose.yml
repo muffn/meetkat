@@ -3,3 +3,8 @@ services:
     image: ghcr.io/muffn/meetkat:${TAG:-latest}
     ports:
       - "8080:8080"
+    volumes:
+      - meetkat-data:/app/data
+
+volumes:
+  meetkat-data:

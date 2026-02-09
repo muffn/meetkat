@@ -27,6 +27,8 @@ COPY --from=build /app/meetkat .
 COPY --from=build /app/templates/ ./templates/
 COPY --from=css /app/static/css/style.css ./static/css/
 
+RUN mkdir -p /app/data
+
 EXPOSE 8080
 
 CMD ["./meetkat"]

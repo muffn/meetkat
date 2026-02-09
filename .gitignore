@@ -30,6 +30,9 @@ node_modules/
 # Tailwind CSS (compiled output)
 static/css/style.css
 
+# SQLite data
+data/
+
 # OS
 .DS_Store
 Thumbs.db
