@@ -78,7 +78,7 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
 		return
 	}
-	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", p.ID))
+	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", p.AdminID))
 }
 
 func (h *PollHandler) renderNotFound(c *gin.Context) {
@@ -149,4 +149,61 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", id))
+}
+
+func (h *PollHandler) ShowAdmin(c *gin.Context) {
+	adminID := c.Param("id")
+
+	p, err := h.svc.GetByAdminID(adminID)
+	if err != nil {
+		log.Printf("get poll by admin id error: %v", err)
+		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		return
+	}
+	if p == nil {
+		h.renderNotFound(c)
+		return
+	}
+
+	scheme := "http"
+	if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+
+	totals := poll.Totals(p)
+	h.renderHTML(c, http.StatusOK, "admin.html", gin.H{
+		"title":    p.Title + " – Admin – meetkat",
+		"poll":     p,
+		"totals":   totals,
+		"pollURL":  fmt.Sprintf("%s/poll/%s", baseURL, p.ID),
+		"adminURL": fmt.Sprintf("%s/poll/%s/admin", baseURL, p.AdminID),
+	})
+}
+
+func (h *PollHandler) RemoveVote(c *gin.Context) {
+	adminID := c.Param("id")
+
+	p, err := h.svc.GetByAdminID(adminID)
+	if err != nil {
+		log.Printf("get poll by admin id error: %v", err)
+		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		return
+	}
+	if p == nil {
+		h.renderNotFound(c)
+		return
+	}
+
+	voterName := strings.TrimSpace(c.PostForm("voter_name"))
+	if voterName == "" {
+		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+		return
+	}
+
+	if err := h.svc.RemoveVote(p.ID, voterName); err != nil {
+		log.Printf("remove vote error: %v", err)
+	}
+
+	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 }

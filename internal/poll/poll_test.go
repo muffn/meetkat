@@ -18,6 +18,15 @@ func TestCreate(t *testing.T) {
 	if len(p.ID) != 8 {
 		t.Fatalf("expected ID length 8, got %d", len(p.ID))
 	}
+	if p.AdminID == "" {
+		t.Fatal("expected non-empty AdminID")
+	}
+	if len(p.AdminID) != 8 {
+		t.Fatalf("expected AdminID length 8, got %d", len(p.AdminID))
+	}
+	if p.ID == p.AdminID {
+		t.Error("expected ID and AdminID to be different")
+	}
 	if p.Title != "Dinner" {
 		t.Errorf("expected title Dinner, got %q", p.Title)
 	}
@@ -130,6 +139,73 @@ func TestTotals(t *testing.T) {
 		if got := totals[tt.option]; got != tt.want {
 			t.Errorf("Totals[%q] = %d, want %d", tt.option, got, tt.want)
 		}
+	}
+}
+
+func TestGetByAdminID(t *testing.T) {
+	svc := NewService(NewMemoryRepository())
+	created, err := svc.Create("Meeting", "", []string{"Mon"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got, err := svc.GetByAdminID(created.AdminID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got == nil {
+		t.Fatal("expected poll to be found")
+	}
+	if got.Title != "Meeting" {
+		t.Errorf("expected title Meeting, got %q", got.Title)
+	}
+	if got.ID != created.ID {
+		t.Errorf("expected ID %q, got %q", created.ID, got.ID)
+	}
+}
+
+func TestGetByAdminIDNotFound(t *testing.T) {
+	svc := NewService(NewMemoryRepository())
+	got, err := svc.GetByAdminID("doesnotexist")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
+		t.Fatal("expected poll not to be found")
+	}
+}
+
+func TestRemoveVote(t *testing.T) {
+	svc := NewService(NewMemoryRepository())
+	p, err := svc.Create("Offsite", "", []string{"Mon", "Tue"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true})
+	_ = svc.AddVote(p.ID, "Bob", map[string]bool{"Tue": true})
+
+	if err := svc.RemoveVote(p.ID, "Alice"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	got, _ := svc.Get(p.ID)
+	if len(got.Votes) != 1 {
+		t.Fatalf("expected 1 vote, got %d", len(got.Votes))
+	}
+	if got.Votes[0].Name != "Bob" {
+		t.Errorf("expected remaining vote to be Bob, got %q", got.Votes[0].Name)
+	}
+}
+
+func TestRemoveVoteNotFound(t *testing.T) {
+	svc := NewService(NewMemoryRepository())
+	p, _ := svc.Create("Test", "", []string{"A"})
+	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"A": true})
+
+	err := svc.RemoveVote(p.ID, "Nobody")
+	if err == nil {
+		t.Fatal("expected error for nonexistent voter")
 	}
 }
 

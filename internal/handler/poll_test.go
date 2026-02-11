@@ -27,6 +27,8 @@ func setupTestRouter() (*gin.Engine, *poll.Service) {
 	r.POST("/new", h.CreatePoll)
 	r.GET("/poll/:id", h.ShowPoll)
 	r.POST("/poll/:id/vote", h.SubmitVote)
+	r.GET("/poll/:id/admin", h.ShowAdmin)
+	r.POST("/poll/:id/admin/remove", h.RemoveVote)
 	return r, svc
 }
 
@@ -36,6 +38,7 @@ func loadTestTemplates() map[string]*template.Template {
 		"index.html": "../../templates/index.html",
 		"new.html":   "../../templates/new.html",
 		"poll.html":  "../../templates/poll.html",
+		"admin.html": "../../templates/admin.html",
 		"404.html":   "../../templates/404.html",
 	}
 
@@ -240,5 +243,111 @@ func TestPollViewNotFound(t *testing.T) {
 
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestCreatePollRedirectsToAdmin(t *testing.T) {
+	router, svc := setupTestRouter()
+
+	form := url.Values{
+		"title":   {"Team dinner"},
+		"dates[]": {"2025-06-10", "2025-06-11"},
+	}
+	w := postForm(router, "/new", form)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
+	}
+
+	loc := w.Header().Get("Location")
+	if !strings.HasSuffix(loc, "/admin") {
+		t.Fatalf("expected redirect to admin page, got %q", loc)
+	}
+
+	// Verify the poll was created and the admin ID in the redirect is valid.
+	// Extract admin ID from location: /poll/<adminID>/admin
+	parts := strings.Split(loc, "/")
+	if len(parts) < 4 {
+		t.Fatalf("unexpected redirect location format: %q", loc)
+	}
+	adminID := parts[2]
+
+	p, err := svc.GetByAdminID(adminID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if p == nil {
+		t.Fatal("expected poll to be found by admin ID")
+	}
+	if p.Title != "Team dinner" {
+		t.Errorf("expected title 'Team dinner', got %q", p.Title)
+	}
+}
+
+func TestShowAdmin(t *testing.T) {
+	router, svc := setupTestRouter()
+	p := seedPoll(svc, "Admin poll", []string{"Mon", "Tue"})
+	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
+
+	req := httptest.NewRequest(http.MethodGet, "/poll/"+p.AdminID+"/admin", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	body := w.Body.String()
+	if !strings.Contains(body, "Admin poll") {
+		t.Error("expected response body to contain poll title")
+	}
+	if !strings.Contains(body, "Alice") {
+		t.Error("expected response body to contain voter name")
+	}
+	if !strings.Contains(body, "Remove") {
+		t.Error("expected response body to contain Remove button")
+	}
+	if !strings.Contains(body, p.ID) {
+		t.Error("expected response body to contain participant link")
+	}
+}
+
+func TestShowAdminNotFound(t *testing.T) {
+	router, _ := setupTestRouter()
+
+	req := httptest.NewRequest(http.MethodGet, "/poll/nonexistent/admin", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestRemoveVoteHandler(t *testing.T) {
+	router, svc := setupTestRouter()
+	p := seedPoll(svc, "Remove test", []string{"Mon"})
+	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true})
+	_ = svc.AddVote(p.ID, "Bob", map[string]bool{"Mon": true})
+
+	form := url.Values{
+		"voter_name": {"Alice"},
+	}
+	w := postForm(router, "/poll/"+p.AdminID+"/admin/remove", form)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
+	}
+	expectedLoc := "/poll/" + p.AdminID + "/admin"
+	if loc := w.Header().Get("Location"); loc != expectedLoc {
+		t.Fatalf("expected redirect to %q, got %q", expectedLoc, loc)
+	}
+
+	got, _ := svc.Get(p.ID)
+	if len(got.Votes) != 1 {
+		t.Fatalf("expected 1 vote after removal, got %d", len(got.Votes))
+	}
+	if got.Votes[0].Name != "Bob" {
+		t.Errorf("expected remaining vote to be Bob, got %q", got.Votes[0].Name)
 	}
 }

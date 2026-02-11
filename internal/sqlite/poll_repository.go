@@ -25,8 +25,8 @@ func (r *PollRepository) Create(p *poll.Poll) error {
 	defer func() { _ = tx.Rollback() }()
 
 	res, err := tx.Exec(
-		"INSERT INTO polls (public_id, title, description, created_at) VALUES (?, ?, ?, ?)",
-		p.ID, p.Title, p.Description, p.CreatedAt.UTC().Format(time.RFC3339),
+		"INSERT INTO polls (public_id, admin_id, title, description, created_at) VALUES (?, ?, ?, ?, ?)",
+		p.ID, p.AdminID, p.Title, p.Description, p.CreatedAt.UTC().Format(time.RFC3339),
 	)
 	if err != nil {
 		return fmt.Errorf("insert poll: %w", err)
@@ -51,14 +51,25 @@ func (r *PollRepository) Create(p *poll.Poll) error {
 }
 
 func (r *PollRepository) GetByPublicID(publicID string) (*poll.Poll, error) {
+	return r.getPollByQuery(
+		"SELECT id, public_id, admin_id, title, description, created_at FROM polls WHERE public_id = ?",
+		publicID,
+	)
+}
+
+func (r *PollRepository) GetByAdminID(adminID string) (*poll.Poll, error) {
+	return r.getPollByQuery(
+		"SELECT id, public_id, admin_id, title, description, created_at FROM polls WHERE admin_id = ?",
+		adminID,
+	)
+}
+
+func (r *PollRepository) getPollByQuery(query, value string) (*poll.Poll, error) {
 	var rowID int64
 	var p poll.Poll
 	var createdAt string
 
-	err := r.db.QueryRow(
-		"SELECT id, public_id, title, description, created_at FROM polls WHERE public_id = ?",
-		publicID,
-	).Scan(&rowID, &p.ID, &p.Title, &p.Description, &createdAt)
+	err := r.db.QueryRow(query, value).Scan(&rowID, &p.ID, &p.AdminID, &p.Title, &p.Description, &createdAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -158,6 +169,24 @@ func (r *PollRepository) GetByPublicID(publicID string) (*poll.Poll, error) {
 	}
 
 	return &p, nil
+}
+
+func (r *PollRepository) RemoveVote(pollID string, voterName string) error {
+	res, err := r.db.Exec(
+		"DELETE FROM votes WHERE poll_id = (SELECT id FROM polls WHERE public_id = ?) AND name = ?",
+		pollID, voterName,
+	)
+	if err != nil {
+		return fmt.Errorf("delete vote: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("rows affected: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("vote not found")
+	}
+	return nil
 }
 
 func (r *PollRepository) AddVote(pollID string, vote poll.Vote) error {
