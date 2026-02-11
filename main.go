@@ -20,6 +20,7 @@ func loadTemplates() map[string]*template.Template {
 		"index.html": "templates/index.html",
 		"new.html":   "templates/new.html",
 		"poll.html":  "templates/poll.html",
+		"admin.html": "templates/admin.html",
 		"404.html":   "templates/404.html",
 	}
 
@@ -73,6 +74,8 @@ func main() {
 	r.POST("/new", h.CreatePoll)
 	r.GET("/poll/:id", h.ShowPoll)
 	r.POST("/poll/:id/vote", h.SubmitVote)
+	r.GET("/poll/:id/admin", h.ShowAdmin)
+	r.POST("/poll/:id/admin/remove", h.RemoveVote)
 
 	log.Fatal(r.Run(":8080"))
 }

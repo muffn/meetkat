@@ -34,6 +34,17 @@ func (r *MemoryRepository) GetByPublicID(publicID string) (*Poll, error) {
 	return p, nil
 }
 
+func (r *MemoryRepository) GetByAdminID(adminID string) (*Poll, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, p := range r.polls {
+		if p.AdminID == adminID {
+			return p, nil
+		}
+	}
+	return nil, nil
+}
+
 func (r *MemoryRepository) AddVote(pollID string, vote Vote) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -43,4 +54,20 @@ func (r *MemoryRepository) AddVote(pollID string, vote Vote) error {
 	}
 	p.Votes = append(p.Votes, vote)
 	return nil
+}
+
+func (r *MemoryRepository) RemoveVote(pollID string, voterName string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	p, ok := r.polls[pollID]
+	if !ok {
+		return errors.New("poll not found")
+	}
+	for i, v := range p.Votes {
+		if v.Name == voterName {
+			p.Votes = append(p.Votes[:i], p.Votes[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("vote not found")
 }

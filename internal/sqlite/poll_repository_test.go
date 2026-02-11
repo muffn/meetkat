@@ -21,6 +21,7 @@ func TestCreateAndGet(t *testing.T) {
 
 	p := &poll.Poll{
 		ID:          "abc12345",
+		AdminID:     "adm12345",
 		Title:       "Dinner",
 		Description: "Pick a day",
 		Options:     []string{"Mon", "Tue", "Wed"},
@@ -42,6 +43,9 @@ func TestCreateAndGet(t *testing.T) {
 	}
 	if got.Description != "Pick a day" {
 		t.Errorf("description: got %q, want %q", got.Description, "Pick a day")
+	}
+	if got.AdminID != "adm12345" {
+		t.Errorf("admin_id: got %q, want %q", got.AdminID, "adm12345")
 	}
 	if len(got.Options) != 3 {
 		t.Fatalf("options: got %d, want 3", len(got.Options))
@@ -69,11 +73,53 @@ func TestGetNotFound(t *testing.T) {
 	}
 }
 
+func TestGetByAdminID(t *testing.T) {
+	repo := openTestDB(t)
+
+	p := &poll.Poll{
+		ID:          "pub12345",
+		AdminID:     "adm99999",
+		Title:       "Admin test",
+		Description: "",
+		Options:     []string{"A"},
+	}
+	if err := repo.Create(p); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	got, err := repo.GetByAdminID("adm99999")
+	if err != nil {
+		t.Fatalf("get by admin id: %v", err)
+	}
+	if got == nil {
+		t.Fatal("expected poll, got nil")
+	}
+	if got.ID != "pub12345" {
+		t.Errorf("public id: got %q, want %q", got.ID, "pub12345")
+	}
+	if got.AdminID != "adm99999" {
+		t.Errorf("admin id: got %q, want %q", got.AdminID, "adm99999")
+	}
+}
+
+func TestGetByAdminIDNotFound(t *testing.T) {
+	repo := openTestDB(t)
+
+	got, err := repo.GetByAdminID("nonexistent")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != nil {
+		t.Fatal("expected nil, got poll")
+	}
+}
+
 func TestAddVote(t *testing.T) {
 	repo := openTestDB(t)
 
 	p := &poll.Poll{
 		ID:      "vote1234",
+		AdminID: "adm_vote",
 		Title:   "Lunch",
 		Options: []string{"Mon", "Tue"},
 	}
@@ -120,11 +166,60 @@ func TestAddVoteNonexistentPoll(t *testing.T) {
 	}
 }
 
+func TestRemoveVote(t *testing.T) {
+	repo := openTestDB(t)
+
+	p := &poll.Poll{
+		ID:      "rmvote12",
+		AdminID: "adm_rmv1",
+		Title:   "Remove test",
+		Options: []string{"Mon", "Tue"},
+	}
+	if err := repo.Create(p); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	_ = repo.AddVote("rmvote12", poll.Vote{Name: "Alice", Responses: map[string]bool{"Mon": true}})
+	_ = repo.AddVote("rmvote12", poll.Vote{Name: "Bob", Responses: map[string]bool{"Tue": true}})
+
+	if err := repo.RemoveVote("rmvote12", "Alice"); err != nil {
+		t.Fatalf("remove vote: %v", err)
+	}
+
+	got, _ := repo.GetByPublicID("rmvote12")
+	if len(got.Votes) != 1 {
+		t.Fatalf("votes: got %d, want 1", len(got.Votes))
+	}
+	if got.Votes[0].Name != "Bob" {
+		t.Errorf("remaining vote: got %q, want Bob", got.Votes[0].Name)
+	}
+}
+
+func TestRemoveVoteNotFound(t *testing.T) {
+	repo := openTestDB(t)
+
+	p := &poll.Poll{
+		ID:      "rmvnf123",
+		AdminID: "adm_rmvn",
+		Title:   "Remove NF",
+		Options: []string{"A"},
+	}
+	if err := repo.Create(p); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	err := repo.RemoveVote("rmvnf123", "Nobody")
+	if err == nil {
+		t.Fatal("expected error for nonexistent voter")
+	}
+}
+
 func TestMultipleVotes(t *testing.T) {
 	repo := openTestDB(t)
 
 	p := &poll.Poll{
 		ID:      "multi123",
+		AdminID: "adm_mult",
 		Title:   "Sprint",
 		Options: []string{"A", "B"},
 	}

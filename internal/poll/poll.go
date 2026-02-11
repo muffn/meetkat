@@ -16,6 +16,7 @@ type Vote struct {
 
 type Poll struct {
 	ID          string
+	AdminID     string
 	Title       string
 	Description string
 	Options     []string
@@ -42,6 +43,7 @@ func generateID() string {
 func (s *Service) Create(title, description string, options []string) (*Poll, error) {
 	p := &Poll{
 		ID:          generateID(),
+		AdminID:     generateID(),
 		Title:       title,
 		Description: description,
 		Options:     options,
@@ -55,6 +57,14 @@ func (s *Service) Create(title, description string, options []string) (*Poll, er
 
 func (s *Service) Get(id string) (*Poll, error) {
 	return s.repo.GetByPublicID(id)
+}
+
+func (s *Service) GetByAdminID(adminID string) (*Poll, error) {
+	return s.repo.GetByAdminID(adminID)
+}
+
+func (s *Service) RemoveVote(pollID, voterName string) error {
+	return s.repo.RemoveVote(pollID, voterName)
 }
 
 func (s *Service) AddVote(pollID, name string, responses map[string]bool) error {
