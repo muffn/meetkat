@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"meetkat/internal/i18n"
 	"meetkat/internal/poll"
 
 	"github.com/gin-gonic/gin"
@@ -17,12 +18,25 @@ func init() {
 	gin.SetMode(gin.TestMode)
 }
 
+func i18nMiddleware() gin.HandlerFunc {
+	tr, err := i18n.New()
+	if err != nil {
+		panic(err)
+	}
+	return func(c *gin.Context) {
+		loc := tr.ForLang("en")
+		c.Set("localizer", loc)
+		c.Next()
+	}
+}
+
 func setupTestRouter() (*gin.Engine, *poll.Service) {
 	svc := poll.NewService(poll.NewMemoryRepository())
 	tmpls := loadTestTemplates()
 	h := NewPollHandler(svc, tmpls)
 
 	r := gin.New()
+	r.Use(i18nMiddleware())
 	r.GET("/new", h.ShowNew)
 	r.POST("/new", h.CreatePoll)
 	r.GET("/poll/:id", h.ShowPoll)
@@ -42,9 +56,13 @@ func loadTestTemplates() map[string]*template.Template {
 		"404.html":   "../../templates/404.html",
 	}
 
+	funcs := template.FuncMap{
+		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
+	}
+
 	tmpls := make(map[string]*template.Template, len(pages))
 	for name, path := range pages {
-		tmpls[name] = template.Must(template.ParseFiles(base, path))
+		tmpls[name] = template.Must(template.New("").Funcs(funcs).ParseFiles(base, path))
 	}
 	return tmpls
 }

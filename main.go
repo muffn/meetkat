@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"meetkat/internal/handler"
+	"meetkat/internal/i18n"
 	"meetkat/internal/poll"
 	"meetkat/internal/sqlite"
 
@@ -24,9 +25,13 @@ func loadTemplates() map[string]*template.Template {
 		"404.html":   "templates/404.html",
 	}
 
+	funcs := template.FuncMap{
+		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
+	}
+
 	tmpls := make(map[string]*template.Template, len(pages))
 	for name, path := range pages {
-		tmpls[name] = template.Must(template.ParseFiles(base, path))
+		tmpls[name] = template.Must(template.New("").Funcs(funcs).ParseFiles(base, path))
 	}
 	return tmpls
 }
@@ -47,6 +52,11 @@ func main() {
 	}
 	defer func() { _ = db.Close() }()
 
+	translator, err := i18n.New()
+	if err != nil {
+		log.Fatalf("init i18n: %v", err)
+	}
+
 	repo := sqlite.NewPollRepository(db)
 	svc := poll.NewService(repo)
 	tmpls := loadTemplates()
@@ -55,16 +65,30 @@ func main() {
 	r := gin.Default()
 	r.Static("/static", "./static")
 
+	// Language middleware: ?lang= query param (priority) then Accept-Language header
+	r.Use(func(c *gin.Context) {
+		lang := c.Query("lang")
+		if lang == "" {
+			lang = translator.Match(c.GetHeader("Accept-Language"))
+		}
+		loc := translator.ForLang(lang)
+		c.Set("localizer", loc)
+		c.Next()
+	})
+
 	r.GET("/", func(c *gin.Context) {
 		tmpl, ok := tmpls["index.html"]
 		if !ok {
 			c.String(http.StatusInternalServerError, "template not found")
 			return
 		}
+		loc := c.MustGet("localizer").(*i18n.Localizer)
 		c.Status(http.StatusOK)
 		c.Header("Content-Type", "text/html; charset=utf-8")
 		if err := tmpl.ExecuteTemplate(c.Writer, "index.html", gin.H{
 			"title": "meetkat",
+			"t":     loc.T,
+			"lang":  loc.Lang(),
 		}); err != nil {
 			log.Printf("template render error: %v", err)
 		}
