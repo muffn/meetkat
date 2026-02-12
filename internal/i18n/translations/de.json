@@ -1,6 +1,10 @@
 {
   "nav.back": "Zurück",
 
+  "settings.label": "Einstellungen",
+  "settings.language": "Sprache",
+  "settings.theme": "Design",
+
   "theme.system": "System",
   "theme.light": "Hell",
   "theme.dark": "Dunkel",

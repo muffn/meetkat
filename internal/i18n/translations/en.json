@@ -1,6 +1,10 @@
 {
   "nav.back": "Back",
 
+  "settings.label": "Settings",
+  "settings.language": "Language",
+  "settings.theme": "Theme",
+
   "theme.system": "System",
   "theme.light": "Light",
   "theme.dark": "Dark",
