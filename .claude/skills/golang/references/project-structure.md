@@ -32,6 +32,53 @@ myproject/
 └── README.md
 ```
 
+## meetkat Project Layout
+
+```
+meetkat/
+├── main.go                       # Composition root (config, DI, routes)
+├── go.mod / go.sum
+├── package.json                  # Node deps (@tailwindcss/cli)
+├── internal/
+│   ├── config/
+│   │   └── config.go             # Config struct + Load() from env vars
+│   ├── handler/
+│   │   ├── helpers.go            # LocalizerFromCtx (shared by handlers)
+│   │   ├── home.go               # HomeHandler (landing page)
+│   │   ├── poll.go               # PollHandler (CRUD, voting, admin)
+│   │   └── poll_test.go
+│   ├── i18n/
+│   │   ├── i18n.go               # Translator, Localizer
+│   │   └── translations/         # JSON translation files
+│   ├── middleware/
+│   │   └── lang.go               # LangCookie middleware
+│   ├── poll/
+│   │   ├── poll.go               # Domain model + Service
+│   │   ├── repository.go         # Repository interface + MemoryRepository
+│   │   └── poll_test.go
+│   ├── sqlite/
+│   │   ├── sqlite.go             # DB open + migrations
+│   │   ├── poll_repository.go    # SQLite PollRepository impl
+│   │   └── sqlite_test.go
+│   └── view/
+│       └── view.go               # LoadTemplates(baseDir)
+├── templates/
+│   ├── layouts/
+│   │   └── base.html
+│   ├── index.html
+│   ├── new.html
+│   ├── poll.html
+│   ├── admin.html
+│   └── 404.html
+├── static/css/
+│   ├── input.css
+│   └── style.css                 # Compiled (gitignored)
+├── data/                         # meetkat.db (runtime, gitignored)
+├── .air.toml
+├── Dockerfile
+└── docker-compose.yml
+```
+
 ## go.mod Basics
 
 ```go
