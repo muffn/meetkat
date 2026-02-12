@@ -71,3 +71,29 @@ func (r *MemoryRepository) RemoveVote(pollID string, voterName string) error {
 	}
 	return errors.New("vote not found")
 }
+
+func (r *MemoryRepository) Delete(pollID string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, ok := r.polls[pollID]; !ok {
+		return errors.New("poll not found")
+	}
+	delete(r.polls, pollID)
+	return nil
+}
+
+func (r *MemoryRepository) UpdateVote(pollID string, oldName string, vote Vote) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	p, ok := r.polls[pollID]
+	if !ok {
+		return errors.New("poll not found")
+	}
+	for i, v := range p.Votes {
+		if v.Name == oldName {
+			p.Votes[i] = vote
+			return nil
+		}
+	}
+	return errors.New("vote not found")
+}

@@ -74,6 +74,17 @@ func (s *Service) AddVote(pollID, name string, responses map[string]bool) error 
 	return s.repo.AddVote(pollID, Vote{Name: name, Responses: responses})
 }
 
+func (s *Service) Delete(pollID string) error {
+	return s.repo.Delete(pollID)
+}
+
+func (s *Service) UpdateVote(pollID, oldName, newName string, responses map[string]bool) error {
+	if newName == "" {
+		return errors.New("name must not be empty")
+	}
+	return s.repo.UpdateVote(pollID, oldName, Vote{Name: newName, Responses: responses})
+}
+
 func Totals(p *Poll) map[string]int {
 	totals := make(map[string]int, len(p.Options))
 	for _, opt := range p.Options {
