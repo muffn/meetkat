@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -9,7 +8,9 @@ import (
 	"testing"
 
 	"meetkat/internal/i18n"
+	"meetkat/internal/middleware"
 	"meetkat/internal/poll"
+	"meetkat/internal/view"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,59 +19,32 @@ func init() {
 	gin.SetMode(gin.TestMode)
 }
 
-func i18nMiddleware() gin.HandlerFunc {
-	tr, err := i18n.New()
-	if err != nil {
-		panic(err)
-	}
-	return func(c *gin.Context) {
-		loc := tr.ForLang("en")
-		c.Set("localizer", loc)
-		c.Next()
-	}
-}
-
-// langCookieMiddleware mirrors the real middleware from main.go:
-// ?lang= query param (priority) > meetkat_lang cookie > Accept-Language header.
-func langCookieMiddleware() gin.HandlerFunc {
-	tr, err := i18n.New()
-	if err != nil {
-		panic(err)
-	}
-	return func(c *gin.Context) {
-		lang := c.Query("lang")
-		if lang != "" {
-			c.SetCookie("meetkat_lang", lang, 365*24*60*60, "/", "", false, false)
-		} else {
-			lang, _ = c.Cookie("meetkat_lang")
-			if lang == "" {
-				lang = tr.Match(c.GetHeader("Accept-Language"))
-			}
-		}
-		loc := tr.ForLang(lang)
-		c.Set("localizer", loc)
-		c.Next()
-	}
-}
-
 func setupLangTestRouter() *gin.Engine {
+	tr, err := i18n.New()
+	if err != nil {
+		panic(err)
+	}
 	svc := poll.NewService(poll.NewMemoryRepository())
-	tmpls := loadTestTemplates()
+	tmpls := view.LoadTemplates("../..")
 	h := NewPollHandler(svc, tmpls)
 
 	r := gin.New()
-	r.Use(langCookieMiddleware())
+	r.Use(middleware.LangCookie(tr))
 	r.GET("/new", h.ShowNew)
 	return r
 }
 
 func setupTestRouter() (*gin.Engine, *poll.Service) {
+	tr, err := i18n.New()
+	if err != nil {
+		panic(err)
+	}
 	svc := poll.NewService(poll.NewMemoryRepository())
-	tmpls := loadTestTemplates()
+	tmpls := view.LoadTemplates("../..")
 	h := NewPollHandler(svc, tmpls)
 
 	r := gin.New()
-	r.Use(i18nMiddleware())
+	r.Use(middleware.LangCookie(tr))
 	r.GET("/new", h.ShowNew)
 	r.POST("/new", h.CreatePoll)
 	r.GET("/poll/:id", h.ShowPoll)
@@ -80,27 +54,6 @@ func setupTestRouter() (*gin.Engine, *poll.Service) {
 	r.POST("/poll/:id/admin/delete", h.DeletePoll)
 	r.POST("/poll/:id/admin/edit", h.UpdateVote)
 	return r, svc
-}
-
-func loadTestTemplates() map[string]*template.Template {
-	base := "../../templates/layouts/base.html"
-	pages := map[string]string{
-		"index.html": "../../templates/index.html",
-		"new.html":   "../../templates/new.html",
-		"poll.html":  "../../templates/poll.html",
-		"admin.html": "../../templates/admin.html",
-		"404.html":   "../../templates/404.html",
-	}
-
-	funcs := template.FuncMap{
-		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
-	}
-
-	tmpls := make(map[string]*template.Template, len(pages))
-	for name, path := range pages {
-		tmpls[name] = template.Must(template.New("").Funcs(funcs).ParseFiles(base, path))
-	}
-	return tmpls
 }
 
 func postForm(router http.Handler, path string, form url.Values) *httptest.ResponseRecorder {

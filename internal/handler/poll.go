@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 
-	"meetkat/internal/i18n"
 	"meetkat/internal/poll"
 
 	"github.com/gin-gonic/gin"
@@ -22,17 +21,13 @@ func NewPollHandler(svc *poll.Service, tmpls map[string]*template.Template) *Pol
 	return &PollHandler{svc: svc, tmpls: tmpls}
 }
 
-func localizerFromCtx(c *gin.Context) *i18n.Localizer {
-	return c.MustGet("localizer").(*i18n.Localizer)
-}
-
 func (h *PollHandler) renderHTML(c *gin.Context, code int, name string, data gin.H) {
 	tmpl, ok := h.tmpls[name]
 	if !ok {
 		c.String(http.StatusInternalServerError, "template %q not found", name)
 		return
 	}
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	data["t"] = loc.T
 	data["lang"] = loc.Lang()
 	c.Status(code)
@@ -43,14 +38,14 @@ func (h *PollHandler) renderHTML(c *gin.Context, code int, name string, data gin
 }
 
 func (h *PollHandler) ShowNew(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	h.renderHTML(c, http.StatusOK, "new.html", gin.H{
 		"title": loc.T("new.page_title"),
 	})
 }
 
 func (h *PollHandler) CreatePoll(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	title := strings.TrimSpace(c.PostForm("title"))
 	description := strings.TrimSpace(c.PostForm("description"))
 	dates := c.PostFormArray("dates[]")
@@ -92,14 +87,14 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 }
 
 func (h *PollHandler) renderNotFound(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	h.renderHTML(c, http.StatusNotFound, "404.html", gin.H{
 		"title": loc.T("notfound.page_title"),
 	})
 }
 
 func (h *PollHandler) ShowPoll(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	id := c.Param("id")
 
 	p, err := h.svc.Get(id)
@@ -123,7 +118,7 @@ func (h *PollHandler) ShowPoll(c *gin.Context) {
 }
 
 func (h *PollHandler) SubmitVote(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	id := c.Param("id")
 
 	p, err := h.svc.Get(id)
@@ -165,7 +160,7 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 }
 
 func (h *PollHandler) ShowAdmin(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
 	p, err := h.svc.GetByAdminID(adminID)
@@ -196,7 +191,7 @@ func (h *PollHandler) ShowAdmin(c *gin.Context) {
 }
 
 func (h *PollHandler) RemoveVote(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
 	p, err := h.svc.GetByAdminID(adminID)
@@ -224,7 +219,7 @@ func (h *PollHandler) RemoveVote(c *gin.Context) {
 }
 
 func (h *PollHandler) DeletePoll(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
 	p, err := h.svc.GetByAdminID(adminID)
@@ -248,7 +243,7 @@ func (h *PollHandler) DeletePoll(c *gin.Context) {
 }
 
 func (h *PollHandler) UpdateVote(c *gin.Context) {
-	loc := localizerFromCtx(c)
+	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
 	p, err := h.svc.GetByAdminID(adminID)

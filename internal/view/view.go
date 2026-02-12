@@ -1,0 +1,29 @@
+package view
+
+import (
+	"html/template"
+	"path/filepath"
+)
+
+// LoadTemplates parses all page templates against the base layout.
+// baseDir is the project root (e.g. "." from main.go, "../.." from internal/handler/ tests).
+func LoadTemplates(baseDir string) map[string]*template.Template {
+	base := filepath.Join(baseDir, "templates", "layouts", "base.html")
+	pages := map[string]string{
+		"index.html": filepath.Join(baseDir, "templates", "index.html"),
+		"new.html":   filepath.Join(baseDir, "templates", "new.html"),
+		"poll.html":  filepath.Join(baseDir, "templates", "poll.html"),
+		"admin.html": filepath.Join(baseDir, "templates", "admin.html"),
+		"404.html":   filepath.Join(baseDir, "templates", "404.html"),
+	}
+
+	funcs := template.FuncMap{
+		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
+	}
+
+	tmpls := make(map[string]*template.Template, len(pages))
+	for name, path := range pages {
+		tmpls[name] = template.Must(template.New("").Funcs(funcs).ParseFiles(base, path))
+	}
+	return tmpls
+}
