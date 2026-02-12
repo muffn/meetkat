@@ -47,14 +47,14 @@
 
                 <div>
                     <label class="block text-sm font-medium text-text-700">{{ call $.t "new.label_dates" }}</label>
-                    <div id="dates-container" class="mt-2 space-y-2"
+                    <div id="dates-container" class="mt-2 space-y-4 md:space-y-2"
                          data-sr-date="{{ call $.t "new.sr_date_option" }}"
                          data-placeholder="{{ call $.t "new.placeholder_date" }}"
                          data-aria-calendar="{{ call $.t "new.aria_open_calendar" }}">
                         {{if .formDates}}
                             {{range .formDates}}
-                            <div class="date-row flex items-center gap-2">
-                                <label class="relative block w-full">
+                            <div class="date-row relative md:grid md:grid-cols-[1fr_auto] md:items-center md:gap-2">
+                                <label class="relative block">
                                     <span class="sr-only">{{ call $.t "new.sr_date_option" }}</span>
                                     <input type="date" name="dates[]" value="{{.}}"
                                            class="date-input block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">
@@ -67,16 +67,16 @@
                                     </button>
                                 </label>
                                 <button type="button" onclick="removeDate(this)"
-                                        class="shrink-0 rounded-lg border border-background-300 p-2 text-text-400 transition hover:border-accent-300 hover:text-accent-500">
-                                    <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
+                                        class="absolute -right-2 -top-2 z-10 flex size-6 items-center justify-center rounded-full border border-background-300 bg-white text-text-400 shadow-sm transition hover:border-accent-300 hover:text-accent-500 dark:bg-background-100 md:relative md:top-auto md:right-auto md:z-auto md:size-auto md:rounded-lg md:bg-transparent md:p-2 md:shadow-none dark:md:bg-transparent">
+                                    <svg class="size-3 md:size-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                                     </svg>
                                 </button>
                             </div>
                             {{end}}
                         {{else}}
-                            <div class="date-row flex items-center gap-2">
-                                <label class="relative block w-full">
+                            <div class="date-row relative md:grid md:grid-cols-[1fr_auto] md:items-center md:gap-2">
+                                <label class="relative block">
                                     <span class="sr-only">{{ call $.t "new.sr_date_option" }}</span>
                                     <input type="date" name="dates[]"
                                            class="date-input block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">
@@ -89,14 +89,14 @@
                                     </button>
                                 </label>
                                 <button type="button" onclick="removeDate(this)"
-                                        class="shrink-0 rounded-lg border border-background-300 p-2 text-text-400 transition hover:border-accent-300 hover:text-accent-500">
-                                    <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
+                                        class="absolute -right-2 -top-2 z-10 flex size-6 items-center justify-center rounded-full border border-background-300 bg-white text-text-400 shadow-sm transition hover:border-accent-300 hover:text-accent-500 dark:bg-background-100 md:relative md:top-auto md:right-auto md:z-auto md:size-auto md:rounded-lg md:bg-transparent md:p-2 md:shadow-none dark:md:bg-transparent">
+                                    <svg class="size-3 md:size-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                                     </svg>
                                 </button>
                             </div>
-                            <div class="date-row flex items-center gap-2">
-                                <label class="relative block w-full">
+                            <div class="date-row relative md:grid md:grid-cols-[1fr_auto] md:items-center md:gap-2">
+                                <label class="relative block">
                                     <span class="sr-only">{{ call $.t "new.sr_date_option" }}</span>
                                     <input type="date" name="dates[]"
                                            class="date-input block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">
@@ -109,8 +109,8 @@
                                     </button>
                                 </label>
                                 <button type="button" onclick="removeDate(this)"
-                                        class="shrink-0 rounded-lg border border-background-300 p-2 text-text-400 transition hover:border-accent-300 hover:text-accent-500">
-                                    <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
+                                        class="absolute -right-2 -top-2 z-10 flex size-6 items-center justify-center rounded-full border border-background-300 bg-white text-text-400 shadow-sm transition hover:border-accent-300 hover:text-accent-500 dark:bg-background-100 md:relative md:top-auto md:right-auto md:z-auto md:size-auto md:rounded-lg md:bg-transparent md:p-2 md:shadow-none dark:md:bg-transparent">
+                                    <svg class="size-3 md:size-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                                     </svg>
                                 </button>
@@ -187,17 +187,17 @@ function addDate() {
     var srText = container.dataset.srDate;
     var ariaCalendar = container.dataset.ariaCalendar;
     var row = document.createElement('div');
-    row.className = 'date-row flex items-center gap-2';
+    row.className = 'date-row relative md:grid md:grid-cols-[1fr_auto] md:items-center md:gap-2';
     row.innerHTML =
-        '<label class="relative block w-full"><span class="sr-only">' + srText + '</span>' +
+        '<label class="relative block"><span class="sr-only">' + srText + '</span>' +
         '<input type="date" name="dates[]" class="date-input block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">' +
         '<button type="button" class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex" tabindex="-1" aria-label="' + ariaCalendar + '">' +
             '<svg class="size-5" viewBox="0 0 20 20" fill="currentColor">' +
                 '<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>' +
             '</svg>' +
         '</button></label>' +
-        '<button type="button" onclick="removeDate(this)" class="shrink-0 rounded-lg border border-background-300 p-2 text-text-400 transition hover:border-accent-300 hover:text-accent-500">' +
-            '<svg class="size-5" viewBox="0 0 20 20" fill="currentColor">' +
+        '<button type="button" onclick="removeDate(this)" class="absolute -right-2 -top-2 z-10 flex size-6 items-center justify-center rounded-full border border-background-300 bg-white text-text-400 shadow-sm transition hover:border-accent-300 hover:text-accent-500 dark:bg-background-100 md:relative md:top-auto md:right-auto md:z-auto md:size-auto md:rounded-lg md:bg-transparent md:p-2 md:shadow-none dark:md:bg-transparent">' +
+            '<svg class="size-3 md:size-5" viewBox="0 0 20 20" fill="currentColor">' +
                 '<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>' +
             '</svg>' +
         '</button>';
