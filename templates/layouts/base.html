@@ -9,10 +9,17 @@
     <title>{{block "title" .}}meetkat{{end}}</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <script>
-        document.documentElement.classList.toggle(
-            'dark',
-            localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
-        );
+        (function() {
+            var theme = localStorage.theme;
+            if (!theme) {
+                var m = document.cookie.match(/(?:^|;\s*)meetkat_theme=(\w+)/);
+                if (m) { theme = m[1]; localStorage.theme = theme; }
+            }
+            document.documentElement.classList.toggle(
+                'dark',
+                theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+            );
+        })();
     </script>
 </head>
 <body>
@@ -57,25 +64,35 @@
 </div>
 <script>
     (function () {
-        const buttons = document.querySelectorAll('.theme-btn');
-        const checkedClasses = ['bg-white', 'shadow-sm', 'ring-1', 'ring-text-900/10', 'dark:bg-background-300', 'dark:ring-transparent'];
+        var buttons = document.querySelectorAll('.theme-btn');
+        var checkedClasses = ['bg-white', 'shadow-sm', 'ring-1', 'ring-text-900/10', 'dark:bg-background-300', 'dark:ring-transparent'];
+
+        function getTheme() {
+            var theme = localStorage.theme;
+            if (!theme) {
+                var m = document.cookie.match(/(?:^|;\s*)meetkat_theme=(\w+)/);
+                if (m) theme = m[1];
+            }
+            return theme || '';
+        }
 
         function applyTheme() {
+            var theme = getTheme();
             document.documentElement.classList.toggle(
                 'dark',
-                localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+                theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
             );
         }
 
         function updateButtons() {
-            const current = localStorage.theme || 'system';
+            var current = getTheme() || 'system';
             buttons.forEach(function (btn) {
-                const isActive = btn.dataset.theme === current;
+                var isActive = btn.dataset.theme === current;
                 btn.setAttribute('aria-checked', String(isActive));
                 if (isActive) {
-                    btn.classList.add(...checkedClasses);
+                    btn.classList.add.apply(btn.classList, checkedClasses);
                 } else {
-                    btn.classList.remove(...checkedClasses);
+                    btn.classList.remove.apply(btn.classList, checkedClasses);
                 }
             });
         }
@@ -84,8 +101,10 @@
             btn.addEventListener('click', function () {
                 if (btn.dataset.theme === 'system') {
                     localStorage.removeItem('theme');
+                    document.cookie = 'meetkat_theme=; path=/; max-age=0';
                 } else {
                     localStorage.theme = btn.dataset.theme;
+                    document.cookie = 'meetkat_theme=' + btn.dataset.theme + '; path=/; max-age=31536000; SameSite=Lax';
                 }
                 applyTheme();
                 updateButtons();

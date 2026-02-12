@@ -30,6 +30,40 @@ func i18nMiddleware() gin.HandlerFunc {
 	}
 }
 
+// langCookieMiddleware mirrors the real middleware from main.go:
+// ?lang= query param (priority) > meetkat_lang cookie > Accept-Language header.
+func langCookieMiddleware() gin.HandlerFunc {
+	tr, err := i18n.New()
+	if err != nil {
+		panic(err)
+	}
+	return func(c *gin.Context) {
+		lang := c.Query("lang")
+		if lang != "" {
+			c.SetCookie("meetkat_lang", lang, 365*24*60*60, "/", "", false, false)
+		} else {
+			lang, _ = c.Cookie("meetkat_lang")
+			if lang == "" {
+				lang = tr.Match(c.GetHeader("Accept-Language"))
+			}
+		}
+		loc := tr.ForLang(lang)
+		c.Set("localizer", loc)
+		c.Next()
+	}
+}
+
+func setupLangTestRouter() *gin.Engine {
+	svc := poll.NewService(poll.NewMemoryRepository())
+	tmpls := loadTestTemplates()
+	h := NewPollHandler(svc, tmpls)
+
+	r := gin.New()
+	r.Use(langCookieMiddleware())
+	r.GET("/new", h.ShowNew)
+	return r
+}
+
 func setupTestRouter() (*gin.Engine, *poll.Service) {
 	svc := poll.NewService(poll.NewMemoryRepository())
 	tmpls := loadTestTemplates()
@@ -459,5 +493,90 @@ func TestUpdateVoteEmptyName(t *testing.T) {
 	}
 	if got.Votes[0].Name != "Alice" {
 		t.Errorf("expected vote name unchanged as Alice, got %q", got.Votes[0].Name)
+	}
+}
+
+func TestLangQueryParamSetsCookie(t *testing.T) {
+	router := setupLangTestRouter()
+
+	req := httptest.NewRequest(http.MethodGet, "/new?lang=de", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	// Response should contain German text.
+	body := w.Body.String()
+	if !strings.Contains(body, "Zurück") {
+		t.Error("expected German nav text 'Zurück' in response body")
+	}
+
+	// Set-Cookie header should contain meetkat_lang=de.
+	cookies := w.Result().Cookies()
+	var found bool
+	for _, c := range cookies {
+		if c.Name == "meetkat_lang" && c.Value == "de" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected Set-Cookie meetkat_lang=de in response")
+	}
+}
+
+func TestLangCookiePersistsWithoutQueryParam(t *testing.T) {
+	router := setupLangTestRouter()
+
+	// Request without ?lang= but with the cookie set.
+	req := httptest.NewRequest(http.MethodGet, "/new", nil)
+	req.AddCookie(&http.Cookie{Name: "meetkat_lang", Value: "de"})
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	body := w.Body.String()
+	if !strings.Contains(body, "Zurück") {
+		t.Error("expected German nav text 'Zurück' when cookie is set")
+	}
+	if strings.Contains(body, ">Back<") {
+		t.Error("did not expect English nav text when cookie is de")
+	}
+}
+
+func TestLangQueryParamOverridesCookie(t *testing.T) {
+	router := setupLangTestRouter()
+
+	// Cookie says German, but query param says English.
+	req := httptest.NewRequest(http.MethodGet, "/new?lang=en", nil)
+	req.AddCookie(&http.Cookie{Name: "meetkat_lang", Value: "de"})
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+
+	body := w.Body.String()
+	if strings.Contains(body, "Zurück") {
+		t.Error("expected English response when ?lang=en overrides cookie")
+	}
+
+	// Cookie should be updated to en.
+	cookies := w.Result().Cookies()
+	var found bool
+	for _, c := range cookies {
+		if c.Name == "meetkat_lang" && c.Value == "en" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected Set-Cookie meetkat_lang=en to override previous cookie")
 	}
 }
