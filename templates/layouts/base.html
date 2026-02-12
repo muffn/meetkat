@@ -23,9 +23,10 @@
     </script>
 </head>
 <body class="bg-background-50">
-<div class="fixed top-4 right-4 z-50 inline-grid grid-cols-3 gap-0.5 rounded-full bg-background-100 p-0.75 text-text-800"
+<div id="theme-switcher"
+     class="absolute top-4 right-4 z-50 inline-flex gap-0.5 rounded-full bg-background-100 p-0.75 text-text-800 overflow-hidden"
      role="radiogroup">
-    <button type="button" data-theme="system" class="theme-btn rounded-full p-1.5" role="radio" aria-checked="false"
+    <button type="button" data-theme="system" class="theme-btn rounded-full p-1.5 transition-all duration-200 ease-in-out" role="radio" aria-checked="false"
             aria-label="{{ call .t "theme.system_label" }}" title="{{ call .t "theme.system" }}">
         <svg class="size-7" viewBox="0 0 28 28" fill="none">
             <path d="M7.5 8.5C7.5 7.94772 7.94772 7.5 8.5 7.5H19.5C20.0523 7.5 20.5 7.94772 20.5 8.5V16.5C20.5 17.0523 20.0523 17.5 19.5 17.5H8.5C7.94772 17.5 7.5 17.0523 7.5 16.5V8.5Z"
@@ -36,7 +37,7 @@
                   stroke-linecap="round"/>
         </svg>
     </button>
-    <button type="button" data-theme="light" class="theme-btn rounded-full p-1.5" role="radio" aria-checked="false"
+    <button type="button" data-theme="light" class="theme-btn rounded-full p-1.5 transition-all duration-200 ease-in-out" role="radio" aria-checked="false"
             aria-label="{{ call .t "theme.light_label" }}" title="{{ call .t "theme.light" }}">
         <svg class="size-7" viewBox="0 0 28 28" fill="none">
             <circle cx="14" cy="14" r="3.5" stroke="currentColor"/>
@@ -50,7 +51,7 @@
             <path d="M8.69663 8.69711L10.1108 10.1113" stroke="currentColor" stroke-linecap="round"/>
         </svg>
     </button>
-    <button type="button" data-theme="dark" class="theme-btn rounded-full p-1.5" role="radio" aria-checked="false"
+    <button type="button" data-theme="dark" class="theme-btn rounded-full p-1.5 transition-all duration-200 ease-in-out" role="radio" aria-checked="false"
             aria-label="{{ call .t "theme.dark_label" }}" title="{{ call .t "theme.dark" }}">
         <svg class="size-7" viewBox="0 0 28 28" fill="none">
             <path d="M10.5 9.99914C10.5 14.1413 13.8579 17.4991 18 17.4991C19.0332 17.4991 20.0176 17.2902 20.9132 16.9123C19.7761 19.6075 17.109 21.4991 14 21.4991C9.85786 21.4991 6.5 18.1413 6.5 13.9991C6.5 10.8902 8.39167 8.22304 11.0868 7.08594C10.7089 7.98159 10.5 8.96597 10.5 9.99914Z"
@@ -64,8 +65,11 @@
 </div>
 <script>
     (function () {
+        var switcher = document.getElementById('theme-switcher');
         var buttons = document.querySelectorAll('.theme-btn');
         var checkedClasses = ['bg-white', 'shadow-sm', 'ring-1', 'ring-text-900/10', 'dark:bg-background-300', 'dark:ring-transparent'];
+        var hiddenClasses = ['w-0', 'p-0', 'opacity-0', 'overflow-hidden'];
+        var expanded = false;
 
         function getTheme() {
             var theme = localStorage.theme;
@@ -94,11 +98,24 @@
                 } else {
                     btn.classList.remove.apply(btn.classList, checkedClasses);
                 }
+                if (expanded || isActive) {
+                    btn.classList.remove.apply(btn.classList, hiddenClasses);
+                    btn.classList.add('p-1.5');
+                } else {
+                    btn.classList.remove('p-1.5');
+                    btn.classList.add.apply(btn.classList, hiddenClasses);
+                }
             });
         }
 
         buttons.forEach(function (btn) {
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (!expanded) {
+                    expanded = true;
+                    updateButtons();
+                    return;
+                }
                 if (btn.dataset.theme === 'system') {
                     localStorage.removeItem('theme');
                     document.cookie = 'meetkat_theme=; path=/; max-age=0';
@@ -107,8 +124,16 @@
                     document.cookie = 'meetkat_theme=' + btn.dataset.theme + '; path=/; max-age=31536000; SameSite=Lax';
                 }
                 applyTheme();
+                expanded = false;
                 updateButtons();
             });
+        });
+
+        document.addEventListener('click', function (e) {
+            if (expanded && !switcher.contains(e.target)) {
+                expanded = false;
+                updateButtons();
+            }
         });
 
         updateButtons();
