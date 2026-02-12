@@ -113,13 +113,13 @@
                     </div>
                 </div>
 
-                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <h2 class="text-sm font-medium text-amber-800">{{ call .t "admin.share_admin_title" }}</h2>
-                    <p class="mt-1 text-xs text-amber-600">{{ call .t "admin.share_admin_description" }}</p>
+                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-400/30 dark:bg-amber-950/30">
+                    <h2 class="text-sm font-medium text-amber-800 dark:text-amber-300">{{ call .t "admin.share_admin_title" }}</h2>
+                    <p class="mt-1 text-xs text-amber-600 dark:text-amber-400">{{ call .t "admin.share_admin_description" }}</p>
                     <div class="mt-2 flex items-center gap-2">
                         <label for="admin-url" class="sr-only">{{ call .t "admin.sr_admin_url" }}</label>
                         <input type="text" readonly id="admin-url" value="{{ .adminURL }}"
-                               class="block w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-text-700 dark:bg-background-100">
+                               class="block w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-text-700 dark:border-amber-400/30 dark:bg-background-100">
                         <button type="button" id="copy-admin-btn" onclick="copyToClipboard('admin-url', 'copy-admin-btn')"
                                 data-copy-text="{{ call .t "poll.copy" }}" data-copied-text="{{ call .t "poll.copied" }}"
                                 class="shrink-0 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
