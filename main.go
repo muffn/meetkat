@@ -100,6 +100,8 @@ func main() {
 	r.POST("/poll/:id/vote", h.SubmitVote)
 	r.GET("/poll/:id/admin", h.ShowAdmin)
 	r.POST("/poll/:id/admin/remove", h.RemoveVote)
+	r.POST("/poll/:id/admin/delete", h.DeletePoll)
+	r.POST("/poll/:id/admin/edit", h.UpdateVote)
 
 	log.Fatal(r.Run(":8080"))
 }

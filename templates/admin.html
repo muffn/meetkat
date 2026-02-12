@@ -39,10 +39,11 @@
                     </thead>
                     <tbody>
                         {{if .poll.Votes}}
-                        {{range .poll.Votes}}
-                        <tr class="border-b border-background-100">
-                            <td class="px-4 py-3 font-medium text-text-800">{{ .Name }}</td>
-                            {{$responses := .Responses}}
+                        {{range $idx, $vote := .poll.Votes}}
+                        <!-- Display row -->
+                        <tr id="display-{{$idx}}" class="border-b border-background-100">
+                            <td class="px-4 py-3 font-medium text-text-800">{{ $vote.Name }}</td>
+                            {{$responses := $vote.Responses}}
                             {{range $.poll.Options}}
                             <td class="px-4 py-3 text-center">
                                 {{if index $responses .}}
@@ -61,14 +62,70 @@
                             </td>
                             {{end}}
                             <td class="px-4 py-3 text-center">
-                                <form method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove" class="inline">
-                                    <input type="hidden" name="voter_name" value="{{ .Name }}">
-                                    <button type="submit"
-                                            class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
-                                            title="{{ call $.t "admin.remove_title" .Name }}">
-                                        {{ call $.t "admin.remove" }}
+                                <div class="inline-flex gap-1">
+                                    <button type="button" onclick="startEdit({{$idx}})"
+                                            class="rounded-md px-2 py-1 text-xs font-medium text-primary-600 transition hover:bg-primary-50 hover:text-primary-700"
+                                            title="{{ call $.t "admin.edit_title" $vote.Name }}">
+                                        {{ call $.t "admin.edit" }}
                                     </button>
-                                </form>
+                                    <form method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove" class="inline">
+                                        <input type="hidden" name="voter_name" value="{{ $vote.Name }}">
+                                        <button type="submit"
+                                                class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
+                                                title="{{ call $.t "admin.remove_title" $vote.Name }}">
+                                            {{ call $.t "admin.remove" }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Edit row (hidden by default) -->
+                        <tr id="edit-{{$idx}}" class="hidden border-b border-background-100 bg-primary-50/50 dark:bg-primary-950/20">
+                            <td class="px-4 py-3">
+                                <input type="text" name="name" value="{{ $vote.Name }}" form="edit-form-{{$idx}}"
+                                       autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other"
+                                       class="w-full min-w-32 rounded-md border border-background-300 bg-white px-2.5 py-1.5 text-sm text-text-800 placeholder-text-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:bg-background-100">
+                                <input type="hidden" name="old_name" value="{{ $vote.Name }}" form="edit-form-{{$idx}}">
+                            </td>
+                            {{range $.poll.Options}}
+                            <td class="px-4 py-3 text-center">
+                                <div class="inline-flex flex-col overflow-hidden rounded-full border border-background-300">
+                                    <!-- Yes -->
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="vote-{{ . }}" value="yes" form="edit-form-{{$idx}}" class="peer sr-only"
+                                               {{if index $responses .}}checked{{end}}>
+                                        <span class="flex size-8 items-center justify-center border-b border-background-300 bg-background-50 text-background-300 transition hover:bg-green-50 hover:text-green-400 peer-checked:bg-green-100 peer-checked:text-green-600 peer-focus-visible:ring-2 peer-focus-visible:ring-primary-300">
+                                            <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </span>
+                                    </label>
+                                    <!-- No -->
+                                    <label class="cursor-pointer">
+                                        <input type="radio" name="vote-{{ . }}" value="no" form="edit-form-{{$idx}}" class="peer sr-only"
+                                               {{if not (index $responses .)}}checked{{end}}>
+                                        <span class="flex size-8 items-center justify-center bg-background-50 text-background-300 transition hover:bg-red-50 hover:text-red-400 peer-checked:bg-red-100 peer-checked:text-red-500 peer-focus-visible:ring-2 peer-focus-visible:ring-primary-300">
+                                            <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                                            </svg>
+                                        </span>
+                                    </label>
+                                </div>
+                            </td>
+                            {{end}}
+                            <td class="px-4 py-3 text-center">
+                                <div class="inline-flex gap-1">
+                                    <form id="edit-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/edit">
+                                        <button type="submit"
+                                                class="rounded-md bg-primary-500 px-2 py-1 text-xs font-medium text-white transition hover:bg-primary-600">
+                                            {{ call $.t "admin.save" }}
+                                        </button>
+                                    </form>
+                                    <button type="button" onclick="cancelEdit({{$idx}})"
+                                            class="rounded-md px-2 py-1 text-xs font-medium text-text-500 transition hover:bg-background-100 hover:text-text-700">
+                                        {{ call $.t "admin.cancel" }}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         {{end}}
@@ -127,6 +184,33 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Delete Poll (Danger Zone) -->
+                <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-400/30 dark:bg-red-950/30">
+                    <div id="delete-default">
+                        <h2 class="text-sm font-medium text-red-800 dark:text-red-300">{{ call .t "admin.delete_title" }}</h2>
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ call .t "admin.delete_description" }}</p>
+                        <button type="button" onclick="showDeleteConfirm()"
+                                class="mt-3 rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-600">
+                            {{ call .t "admin.delete_button" }}
+                        </button>
+                    </div>
+                    <div id="delete-confirm" class="hidden">
+                        <p class="text-sm font-medium text-red-800 dark:text-red-300">{{ call .t "admin.delete_confirm_text" }}</p>
+                        <div class="mt-3 flex items-center gap-2">
+                            <form method="POST" action="/poll/{{ .poll.AdminID }}/admin/delete">
+                                <button type="submit"
+                                        class="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700">
+                                    {{ call .t "admin.delete_confirm" }}
+                                </button>
+                            </form>
+                            <button type="button" onclick="hideDeleteConfirm()"
+                                    class="rounded-lg px-3 py-2 text-sm font-medium text-text-600 transition hover:bg-background-100 hover:text-text-800">
+                                {{ call .t "admin.delete_cancel" }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -140,6 +224,26 @@ function copyToClipboard(inputId, btnId) {
         btn.textContent = btn.dataset.copiedText;
         setTimeout(function () { btn.textContent = btn.dataset.copyText; }, 2000);
     });
+}
+
+function startEdit(idx) {
+    document.getElementById('display-' + idx).classList.add('hidden');
+    document.getElementById('edit-' + idx).classList.remove('hidden');
+}
+
+function cancelEdit(idx) {
+    document.getElementById('edit-' + idx).classList.add('hidden');
+    document.getElementById('display-' + idx).classList.remove('hidden');
+}
+
+function showDeleteConfirm() {
+    document.getElementById('delete-default').classList.add('hidden');
+    document.getElementById('delete-confirm').classList.remove('hidden');
+}
+
+function hideDeleteConfirm() {
+    document.getElementById('delete-confirm').classList.add('hidden');
+    document.getElementById('delete-default').classList.remove('hidden');
 }
 </script>
 {{end}}

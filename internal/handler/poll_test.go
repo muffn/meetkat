@@ -43,6 +43,8 @@ func setupTestRouter() (*gin.Engine, *poll.Service) {
 	r.POST("/poll/:id/vote", h.SubmitVote)
 	r.GET("/poll/:id/admin", h.ShowAdmin)
 	r.POST("/poll/:id/admin/remove", h.RemoveVote)
+	r.POST("/poll/:id/admin/delete", h.DeletePoll)
+	r.POST("/poll/:id/admin/edit", h.UpdateVote)
 	return r, svc
 }
 
@@ -367,5 +369,95 @@ func TestRemoveVoteHandler(t *testing.T) {
 	}
 	if got.Votes[0].Name != "Bob" {
 		t.Errorf("expected remaining vote to be Bob, got %q", got.Votes[0].Name)
+	}
+}
+
+func TestDeletePollHandler(t *testing.T) {
+	router, svc := setupTestRouter()
+	p := seedPoll(svc, "Delete me", []string{"Mon"})
+	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true})
+
+	form := url.Values{}
+	w := postForm(router, "/poll/"+p.AdminID+"/admin/delete", form)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
+	}
+	if loc := w.Header().Get("Location"); loc != "/" {
+		t.Fatalf("expected redirect to /, got %q", loc)
+	}
+
+	got, _ := svc.Get(p.ID)
+	if got != nil {
+		t.Error("expected poll to be deleted")
+	}
+}
+
+func TestDeletePollNotFound(t *testing.T) {
+	router, _ := setupTestRouter()
+
+	form := url.Values{}
+	w := postForm(router, "/poll/nonexistent/admin/delete", form)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestUpdateVoteHandler(t *testing.T) {
+	router, svc := setupTestRouter()
+	p := seedPoll(svc, "Edit test", []string{"Mon", "Tue"})
+	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
+
+	form := url.Values{
+		"old_name": {"Alice"},
+		"name":     {"Alicia"},
+		"vote-Mon": {"no"},
+		"vote-Tue": {"yes"},
+	}
+	w := postForm(router, "/poll/"+p.AdminID+"/admin/edit", form)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
+	}
+
+	got, _ := svc.Get(p.ID)
+	if len(got.Votes) != 1 {
+		t.Fatalf("expected 1 vote, got %d", len(got.Votes))
+	}
+	v := got.Votes[0]
+	if v.Name != "Alicia" {
+		t.Errorf("expected name Alicia, got %q", v.Name)
+	}
+	if v.Responses["Mon"] {
+		t.Error("expected Mon to be false")
+	}
+	if !v.Responses["Tue"] {
+		t.Error("expected Tue to be true")
+	}
+}
+
+func TestUpdateVoteEmptyName(t *testing.T) {
+	router, svc := setupTestRouter()
+	p := seedPoll(svc, "Edit empty", []string{"Mon"})
+	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true})
+
+	form := url.Values{
+		"old_name": {"Alice"},
+		"name":     {""},
+		"vote-Mon": {"no"},
+	}
+	w := postForm(router, "/poll/"+p.AdminID+"/admin/edit", form)
+
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303 redirect, got %d", w.Code)
+	}
+
+	got, _ := svc.Get(p.ID)
+	if len(got.Votes) != 1 {
+		t.Fatalf("expected 1 vote unchanged, got %d", len(got.Votes))
+	}
+	if got.Votes[0].Name != "Alice" {
+		t.Errorf("expected vote name unchanged as Alice, got %q", got.Votes[0].Name)
 	}
 }

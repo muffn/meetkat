@@ -222,3 +222,62 @@ func (h *PollHandler) RemoveVote(c *gin.Context) {
 
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 }
+
+func (h *PollHandler) DeletePoll(c *gin.Context) {
+	loc := localizerFromCtx(c)
+	adminID := c.Param("id")
+
+	p, err := h.svc.GetByAdminID(adminID)
+	if err != nil {
+		log.Printf("get poll by admin id error: %v", err)
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
+		return
+	}
+	if p == nil {
+		h.renderNotFound(c)
+		return
+	}
+
+	if err := h.svc.Delete(p.ID); err != nil {
+		log.Printf("delete poll error: %v", err)
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, "/")
+}
+
+func (h *PollHandler) UpdateVote(c *gin.Context) {
+	loc := localizerFromCtx(c)
+	adminID := c.Param("id")
+
+	p, err := h.svc.GetByAdminID(adminID)
+	if err != nil {
+		log.Printf("get poll by admin id error: %v", err)
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
+		return
+	}
+	if p == nil {
+		h.renderNotFound(c)
+		return
+	}
+
+	oldName := strings.TrimSpace(c.PostForm("old_name"))
+	newName := strings.TrimSpace(c.PostForm("name"))
+
+	if newName == "" {
+		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+		return
+	}
+
+	responses := make(map[string]bool, len(p.Options))
+	for _, opt := range p.Options {
+		responses[opt] = c.PostForm("vote-"+opt) == "yes"
+	}
+
+	if err := h.svc.UpdateVote(p.ID, oldName, newName, responses); err != nil {
+		log.Printf("update vote error: %v", err)
+	}
+
+	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+}
