@@ -217,6 +217,36 @@
     })();
 </script>
 {{block "content" .}}{{end}}
+<script>
+    (function () {
+        var yesOn = ['bg-green-100', 'text-green-600'];
+        var yesOff = ['bg-background-50', 'text-background-300'];
+        var noOn = ['bg-red-100', 'text-red-500'];
+        var noOff = ['bg-background-50', 'text-background-300'];
+
+        function updateVoteIndicators() {
+            document.querySelectorAll('.vote-radio').forEach(function (radio) {
+                var span = radio.nextElementSibling;
+                if (!span) return;
+                var on = radio.value === 'yes' ? yesOn : noOn;
+                var off = radio.value === 'yes' ? yesOff : noOff;
+                if (radio.checked) {
+                    off.forEach(function (c) { span.classList.remove(c); });
+                    on.forEach(function (c) { span.classList.add(c); });
+                } else {
+                    on.forEach(function (c) { span.classList.remove(c); });
+                    off.forEach(function (c) { span.classList.add(c); });
+                }
+            });
+        }
+
+        document.querySelectorAll('.vote-radio').forEach(function (radio) {
+            radio.addEventListener('change', updateVoteIndicators);
+        });
+
+        updateVoteIndicators();
+    })();
+</script>
 </body>
 </html>
 {{end}}
