@@ -9,20 +9,20 @@
             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd"/>
             </svg>
-            Back
+            {{ call .t "nav.back" }}
         </a>
 
         <div class="mt-6 rounded-xl border border-background-200 bg-white p-6 shadow-sm dark:border-background-200 dark:bg-background-100">
             <!-- Poll header -->
             <div class="mb-6">
                 <span class="inline-block rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
-                    Admin
+                    {{ call .t "admin.badge" }}
                 </span>
                 <h1 class="mt-3 text-2xl font-bold text-text-900">{{ .poll.Title }}</h1>
                 {{if .poll.Description}}
                 <p class="mt-3 rounded-lg border-l-4 border-primary-300 bg-background-50 px-4 py-3 text-sm text-text-700">{{ .poll.Description }}</p>
                 {{end}}
-                <p class="mt-1 text-sm text-text-500">Created {{ .poll.CreatedAt.Format "Jan 2, 2006" }}</p>
+                <p class="mt-1 text-sm text-text-500">{{ call .t "poll.created_at" (.poll.CreatedAt.Format (call .t "format.date")) }}</p>
             </div>
 
             <!-- Voting table (read-only with remove buttons) -->
@@ -30,7 +30,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-background-200 bg-background-50">
-                            <th class="px-4 py-3 text-left font-medium text-text-600">Name</th>
+                            <th class="px-4 py-3 text-left font-medium text-text-600">{{ call $.t "poll.table_name" }}</th>
                             {{range .poll.Options}}
                             <th class="px-4 py-3 text-center font-medium text-text-600">{{ . }}</th>
                             {{end}}
@@ -65,8 +65,8 @@
                                     <input type="hidden" name="voter_name" value="{{ .Name }}">
                                     <button type="submit"
                                             class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
-                                            title="Remove {{ .Name }}">
-                                        Remove
+                                            title="{{ call $.t "admin.remove_title" .Name }}">
+                                        {{ call $.t "admin.remove" }}
                                     </button>
                                 </form>
                             </td>
@@ -75,7 +75,7 @@
                         {{else}}
                         <tr>
                             <td colspan="99" class="px-4 py-8 text-center text-sm text-text-400">
-                                No votes yet. Share the participant link below to start collecting responses.
+                                {{ call $.t "admin.empty" }}
                             </td>
                         </tr>
                         {{end}}
@@ -83,7 +83,7 @@
                     {{if .poll.Votes}}
                     <tfoot>
                         <tr class="bg-background-50">
-                            <td class="px-4 py-3 text-sm font-semibold text-text-700">Total</td>
+                            <td class="px-4 py-3 text-sm font-semibold text-text-700">{{ call $.t "poll.table_total" }}</td>
                             {{range .poll.Options}}
                             <td class="px-4 py-3 text-center text-sm font-semibold text-primary-600">
                                 {{index $.totals .}}
@@ -99,29 +99,31 @@
             <!-- Share section -->
             <div class="space-y-4">
                 <div class="rounded-lg border border-background-200 bg-background-50 p-4">
-                    <h2 class="text-sm font-medium text-text-700">Participant link</h2>
-                    <p class="mt-1 text-xs text-text-400">Send this link to participants so they can vote.</p>
+                    <h2 class="text-sm font-medium text-text-700">{{ call .t "admin.share_participant_title" }}</h2>
+                    <p class="mt-1 text-xs text-text-400">{{ call .t "admin.share_participant_description" }}</p>
                     <div class="mt-2 flex items-center gap-2">
-                        <label for="poll-url" class="sr-only">Participant URL</label>
+                        <label for="poll-url" class="sr-only">{{ call .t "admin.sr_participant_url" }}</label>
                         <input type="text" readonly id="poll-url" value="{{ .pollURL }}"
                                class="block w-full rounded-lg border border-background-300 bg-white px-3 py-2 text-sm text-text-700 dark:bg-background-100">
                         <button type="button" id="copy-poll-btn" onclick="copyToClipboard('poll-url', 'copy-poll-btn')"
+                                data-copy-text="{{ call .t "poll.copy" }}" data-copied-text="{{ call .t "poll.copied" }}"
                                 class="shrink-0 rounded-lg bg-primary-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-primary-600">
-                            Copy
+                            {{ call .t "poll.copy" }}
                         </button>
                     </div>
                 </div>
 
                 <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                    <h2 class="text-sm font-medium text-amber-800">Admin link</h2>
-                    <p class="mt-1 text-xs text-amber-600">Keep this link private. It lets you manage the poll and remove votes.</p>
+                    <h2 class="text-sm font-medium text-amber-800">{{ call .t "admin.share_admin_title" }}</h2>
+                    <p class="mt-1 text-xs text-amber-600">{{ call .t "admin.share_admin_description" }}</p>
                     <div class="mt-2 flex items-center gap-2">
-                        <label for="admin-url" class="sr-only">Admin URL</label>
+                        <label for="admin-url" class="sr-only">{{ call .t "admin.sr_admin_url" }}</label>
                         <input type="text" readonly id="admin-url" value="{{ .adminURL }}"
                                class="block w-full rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm text-text-700 dark:bg-background-100">
                         <button type="button" id="copy-admin-btn" onclick="copyToClipboard('admin-url', 'copy-admin-btn')"
+                                data-copy-text="{{ call .t "poll.copy" }}" data-copied-text="{{ call .t "poll.copied" }}"
                                 class="shrink-0 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-amber-600">
-                            Copy
+                            {{ call .t "poll.copy" }}
                         </button>
                     </div>
                 </div>
@@ -135,8 +137,8 @@ function copyToClipboard(inputId, btnId) {
     var input = document.getElementById(inputId);
     var btn = document.getElementById(btnId);
     navigator.clipboard.writeText(input.value).then(function () {
-        btn.textContent = 'Copied!';
-        setTimeout(function () { btn.textContent = 'Copy'; }, 2000);
+        btn.textContent = btn.dataset.copiedText;
+        setTimeout(function () { btn.textContent = btn.dataset.copyText; }, 2000);
     });
 }
 </script>

@@ -9,16 +9,16 @@
             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd"/>
             </svg>
-            Back
+            {{ call .t "nav.back" }}
         </a>
 
         <div class="mt-6 rounded-xl border border-background-200 bg-white p-6 shadow-sm dark:border-background-200 dark:bg-background-100">
             <div class="mb-6">
                 <span class="inline-block rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-700">
-                    New Poll
+                    {{ call .t "new.badge" }}
                 </span>
-                <h1 class="mt-3 text-2xl font-bold text-text-900">Create a Poll</h1>
-                <p class="mt-1 text-sm text-text-500">Pick a title and add the dates you'd like to propose.</p>
+                <h1 class="mt-3 text-2xl font-bold text-text-900">{{ call .t "new.heading" }}</h1>
+                <p class="mt-1 text-sm text-text-500">{{ call .t "new.subtitle" }}</p>
             </div>
 
             {{if .errors}}
@@ -33,31 +33,34 @@
 
             <form method="POST" action="/new" class="space-y-6">
                 <div>
-                    <label for="title" class="block text-sm font-medium text-text-700">Poll Title</label>
-                    <input type="text" id="title" name="title" placeholder="e.g. Team dinner next week"
+                    <label for="title" class="block text-sm font-medium text-text-700">{{ call $.t "new.label_title" }}</label>
+                    <input type="text" id="title" name="title" placeholder="{{ call $.t "new.placeholder_title" }}"
                            value="{{.formTitle}}"
                            class="mt-1 block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 placeholder-text-400 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50">
                 </div>
 
                 <div>
-                    <label for="description" class="block text-sm font-medium text-text-700">Description <span class="font-normal text-text-400">(optional)</span></label>
-                    <textarea id="description" name="description" rows="2" placeholder="Add some context for your participants…"
+                    <label for="description" class="block text-sm font-medium text-text-700">{{ call $.t "new.label_description" }} <span class="font-normal text-text-400">{{ call $.t "new.label_optional" }}</span></label>
+                    <textarea id="description" name="description" rows="2" placeholder="{{ call $.t "new.placeholder_description" }}"
                               class="mt-1 block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 placeholder-text-400 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50">{{.formDescription}}</textarea>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-text-700">Date Options</label>
-                    <div id="dates-container" class="mt-2 space-y-2">
+                    <label class="block text-sm font-medium text-text-700">{{ call $.t "new.label_dates" }}</label>
+                    <div id="dates-container" class="mt-2 space-y-2"
+                         data-sr-date="{{ call $.t "new.sr_date_option" }}"
+                         data-placeholder="{{ call $.t "new.placeholder_date" }}"
+                         data-aria-calendar="{{ call $.t "new.aria_open_calendar" }}">
                         {{if .formDates}}
                             {{range .formDates}}
                             <div class="date-row flex items-center gap-2">
                                 <label class="relative block w-full">
-                                    <span class="sr-only">Date option</span>
+                                    <span class="sr-only">{{ call $.t "new.sr_date_option" }}</span>
                                     <input type="date" name="dates[]" value="{{.}}"
                                            class="date-input block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">
                                     <button type="button"
                                             class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex"
-                                            tabindex="-1" aria-label="Open calendar">
+                                            tabindex="-1" aria-label="{{ call $.t "new.aria_open_calendar" }}">
                                         <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>
                                         </svg>
@@ -74,12 +77,12 @@
                         {{else}}
                             <div class="date-row flex items-center gap-2">
                                 <label class="relative block w-full">
-                                    <span class="sr-only">Date option</span>
+                                    <span class="sr-only">{{ call $.t "new.sr_date_option" }}</span>
                                     <input type="date" name="dates[]"
                                            class="date-input block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">
                                     <button type="button"
                                             class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex"
-                                            tabindex="-1" aria-label="Open calendar">
+                                            tabindex="-1" aria-label="{{ call $.t "new.aria_open_calendar" }}">
                                         <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>
                                         </svg>
@@ -94,12 +97,12 @@
                             </div>
                             <div class="date-row flex items-center gap-2">
                                 <label class="relative block w-full">
-                                    <span class="sr-only">Date option</span>
+                                    <span class="sr-only">{{ call $.t "new.sr_date_option" }}</span>
                                     <input type="date" name="dates[]"
                                            class="date-input block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">
                                     <button type="button"
                                             class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex"
-                                            tabindex="-1" aria-label="Open calendar">
+                                            tabindex="-1" aria-label="{{ call $.t "new.aria_open_calendar" }}">
                                         <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
                                             <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>
                                         </svg>
@@ -120,13 +123,13 @@
                         <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"/>
                         </svg>
-                        Add another date
+                        {{ call $.t "new.add_date" }}
                     </button>
                 </div>
 
                 <button type="submit"
                         class="w-full rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-600">
-                    Create Poll
+                    {{ call $.t "new.submit" }}
                 </button>
             </form>
         </div>
@@ -137,10 +140,11 @@
 var desktopMQ = window.matchMedia('(min-width: 768px)');
 
 function applyMode(input) {
+    var container = document.getElementById('dates-container');
     var val = input.value;
     if (desktopMQ.matches) {
         input.type = 'text';
-        input.placeholder = 'YYYY-MM-DD';
+        input.placeholder = container.dataset.placeholder;
     } else {
         input.type = 'date';
         input.placeholder = '';
@@ -180,12 +184,14 @@ function initRow(row) {
 
 function addDate() {
     var container = document.getElementById('dates-container');
+    var srText = container.dataset.srDate;
+    var ariaCalendar = container.dataset.ariaCalendar;
     var row = document.createElement('div');
     row.className = 'date-row flex items-center gap-2';
     row.innerHTML =
-        '<label class="relative block w-full"><span class="sr-only">Date option</span>' +
+        '<label class="relative block w-full"><span class="sr-only">' + srText + '</span>' +
         '<input type="date" name="dates[]" class="date-input block w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">' +
-        '<button type="button" class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex" tabindex="-1" aria-label="Open calendar">' +
+        '<button type="button" class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex" tabindex="-1" aria-label="' + ariaCalendar + '">' +
             '<svg class="size-5" viewBox="0 0 20 20" fill="currentColor">' +
                 '<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>' +
             '</svg>' +

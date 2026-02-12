@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"meetkat/internal/i18n"
 	"meetkat/internal/poll"
 
 	"github.com/gin-gonic/gin"
@@ -21,12 +22,19 @@ func NewPollHandler(svc *poll.Service, tmpls map[string]*template.Template) *Pol
 	return &PollHandler{svc: svc, tmpls: tmpls}
 }
 
-func (h *PollHandler) renderHTML(c *gin.Context, code int, name string, data any) {
+func localizerFromCtx(c *gin.Context) *i18n.Localizer {
+	return c.MustGet("localizer").(*i18n.Localizer)
+}
+
+func (h *PollHandler) renderHTML(c *gin.Context, code int, name string, data gin.H) {
 	tmpl, ok := h.tmpls[name]
 	if !ok {
 		c.String(http.StatusInternalServerError, "template %q not found", name)
 		return
 	}
+	loc := localizerFromCtx(c)
+	data["t"] = loc.T
+	data["lang"] = loc.Lang()
 	c.Status(code)
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	if err := tmpl.ExecuteTemplate(c.Writer, name, data); err != nil {
@@ -35,12 +43,14 @@ func (h *PollHandler) renderHTML(c *gin.Context, code int, name string, data any
 }
 
 func (h *PollHandler) ShowNew(c *gin.Context) {
+	loc := localizerFromCtx(c)
 	h.renderHTML(c, http.StatusOK, "new.html", gin.H{
-		"title": "Create a Poll – meetkat",
+		"title": loc.T("new.page_title"),
 	})
 }
 
 func (h *PollHandler) CreatePoll(c *gin.Context) {
+	loc := localizerFromCtx(c)
 	title := strings.TrimSpace(c.PostForm("title"))
 	description := strings.TrimSpace(c.PostForm("description"))
 	dates := c.PostFormArray("dates[]")
@@ -55,15 +65,15 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 
 	var errors []string
 	if title == "" {
-		errors = append(errors, "Please enter a poll title.")
+		errors = append(errors, loc.T("new.error_no_title"))
 	}
 	if len(options) == 0 {
-		errors = append(errors, "Please add at least one date option.")
+		errors = append(errors, loc.T("new.error_no_dates"))
 	}
 
 	if len(errors) > 0 {
 		h.renderHTML(c, http.StatusUnprocessableEntity, "new.html", gin.H{
-			"title":           "Create a Poll – meetkat",
+			"title":           loc.T("new.page_title"),
 			"errors":          errors,
 			"formTitle":       title,
 			"formDescription": description,
@@ -75,25 +85,27 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 	p, err := h.svc.Create(title, description, options)
 	if err != nil {
 		log.Printf("create poll error: %v", err)
-		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", p.AdminID))
 }
 
 func (h *PollHandler) renderNotFound(c *gin.Context) {
+	loc := localizerFromCtx(c)
 	h.renderHTML(c, http.StatusNotFound, "404.html", gin.H{
-		"title": "Poll Not Found – meetkat",
+		"title": loc.T("notfound.page_title"),
 	})
 }
 
 func (h *PollHandler) ShowPoll(c *gin.Context) {
+	loc := localizerFromCtx(c)
 	id := c.Param("id")
 
 	p, err := h.svc.Get(id)
 	if err != nil {
 		log.Printf("get poll error: %v", err)
-		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
 	if p == nil {
@@ -103,7 +115,7 @@ func (h *PollHandler) ShowPoll(c *gin.Context) {
 
 	totals := poll.Totals(p)
 	h.renderHTML(c, http.StatusOK, "poll.html", gin.H{
-		"title":  p.Title + " – meetkat",
+		"title":  fmt.Sprintf(loc.T("poll.page_title"), p.Title),
 		"poll":   p,
 		"totals": totals,
 		"url":    fmt.Sprintf("%s/poll/%s", c.Request.Host, p.ID),
@@ -111,12 +123,13 @@ func (h *PollHandler) ShowPoll(c *gin.Context) {
 }
 
 func (h *PollHandler) SubmitVote(c *gin.Context) {
+	loc := localizerFromCtx(c)
 	id := c.Param("id")
 
 	p, err := h.svc.Get(id)
 	if err != nil {
 		log.Printf("get poll error: %v", err)
-		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
 	if p == nil {
@@ -128,11 +141,11 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 	if name == "" {
 		totals := poll.Totals(p)
 		h.renderHTML(c, http.StatusUnprocessableEntity, "poll.html", gin.H{
-			"title":     p.Title + " – meetkat",
+			"title":     fmt.Sprintf(loc.T("poll.page_title"), p.Title),
 			"poll":      p,
 			"totals":    totals,
 			"url":       fmt.Sprintf("%s/poll/%s", c.Request.Host, p.ID),
-			"voteError": "Please enter your name.",
+			"voteError": loc.T("poll.error_no_name"),
 		})
 		return
 	}
@@ -144,7 +157,7 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 
 	if err := h.svc.AddVote(id, name, responses); err != nil {
 		log.Printf("add vote error: %v", err)
-		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
 
@@ -152,12 +165,13 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 }
 
 func (h *PollHandler) ShowAdmin(c *gin.Context) {
+	loc := localizerFromCtx(c)
 	adminID := c.Param("id")
 
 	p, err := h.svc.GetByAdminID(adminID)
 	if err != nil {
 		log.Printf("get poll by admin id error: %v", err)
-		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
 	if p == nil {
@@ -173,7 +187,7 @@ func (h *PollHandler) ShowAdmin(c *gin.Context) {
 
 	totals := poll.Totals(p)
 	h.renderHTML(c, http.StatusOK, "admin.html", gin.H{
-		"title":    p.Title + " – Admin – meetkat",
+		"title":    fmt.Sprintf(loc.T("admin.page_title"), p.Title),
 		"poll":     p,
 		"totals":   totals,
 		"pollURL":  fmt.Sprintf("%s/poll/%s", baseURL, p.ID),
@@ -182,12 +196,13 @@ func (h *PollHandler) ShowAdmin(c *gin.Context) {
 }
 
 func (h *PollHandler) RemoveVote(c *gin.Context) {
+	loc := localizerFromCtx(c)
 	adminID := c.Param("id")
 
 	p, err := h.svc.GetByAdminID(adminID)
 	if err != nil {
 		log.Printf("get poll by admin id error: %v", err)
-		c.String(http.StatusInternalServerError, "Something went wrong. Please try again.")
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
 	if p == nil {
