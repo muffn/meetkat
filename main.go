@@ -65,11 +65,16 @@ func main() {
 	r := gin.Default()
 	r.Static("/static", "./static")
 
-	// Language middleware: ?lang= query param (priority) then Accept-Language header
+	// Language middleware: ?lang= query param (priority) > cookie > Accept-Language header
 	r.Use(func(c *gin.Context) {
 		lang := c.Query("lang")
-		if lang == "" {
-			lang = translator.Match(c.GetHeader("Accept-Language"))
+		if lang != "" {
+			c.SetCookie("meetkat_lang", lang, 365*24*60*60, "/", "", false, false)
+		} else {
+			lang, _ = c.Cookie("meetkat_lang")
+			if lang == "" {
+				lang = translator.Match(c.GetHeader("Accept-Language"))
+			}
 		}
 		loc := translator.ForLang(lang)
 		c.Set("localizer", loc)
