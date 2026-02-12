@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" id="theme-color" content="#f4f0e4">
     <title>{{block "title" .}}meetkat{{end}}</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <script>
@@ -16,9 +15,10 @@
                 var m = document.cookie.match(/(?:^|;\s*)meetkat_theme=(\w+)/);
                 if (m) { theme = m[1]; localStorage.theme = theme; }
             }
-            var isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.classList.toggle('dark', isDark);
-            document.getElementById('theme-color').content = isDark ? '#131106' : '#f9f7ec';
+            document.documentElement.classList.toggle(
+                'dark',
+                theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+            );
         })();
     </script>
 </head>
@@ -78,9 +78,10 @@
 
         function applyTheme() {
             var theme = getTheme();
-            var isDark = theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.classList.toggle('dark', isDark);
-            document.getElementById('theme-color').content = isDark ? '#131106' : '#f4f0e4';
+            document.documentElement.classList.toggle(
+                'dark',
+                theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
+            );
         }
 
         function updateButtons() {
