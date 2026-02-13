@@ -28,7 +28,7 @@ tmp/
 node_modules/
 
 # Tailwind CSS (compiled output)
-static/css/style.css
+web/static/css/style.css
 
 # SQLite data
 data/

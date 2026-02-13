@@ -130,15 +130,18 @@ meetkat/
 │   ├── handler/             # HTTP handlers (Gin)
 │   ├── poll/                # Domain model, service, repository interface
 │   └── sqlite/              # SQLite repository implementation + migrations
-├── templates/               # Go html/template files
-│   ├── layouts/
-│   │   └── base.html        # Base layout
-│   ├── index.html           # Home page
-│   ├── new.html             # Create poll form
-│   ├── poll.html            # Vote on a poll
-│   ├── admin.html           # Admin view
-│   └── 404.html             # Not found
-├── static/css/              # Tailwind source + compiled output
+├── web/                     # Web assets
+│   ├── templates/           # Go html/template files
+│   │   ├── layouts/
+│   │   │   └── base.html    # Base layout
+│   │   ├── index.html       # Home page
+│   │   ├── new.html         # Create poll form
+│   │   ├── poll.html        # Vote on a poll
+│   │   ├── admin.html       # Admin view
+│   │   └── 404.html         # Not found
+│   └── static/              # Tailwind source + compiled output
+│       ├── css/
+│       └── js/
 ├── Dockerfile               # Multi-stage build
 └── docker-compose.yml       # Docker Compose for deployment
 ```

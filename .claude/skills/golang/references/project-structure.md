@@ -43,7 +43,7 @@ meetkat/
 │   ├── config/
 │   │   └── config.go             # Config struct + Load() from env vars
 │   ├── handler/
-│   │   ├── helpers.go            # LocalizerFromCtx (shared by handlers)
+│   │   ├── helpers.go            # LocalizerFromCtx, renderHTML (shared by handlers)
 │   │   ├── home.go               # HomeHandler (landing page)
 │   │   ├── poll.go               # PollHandler (CRUD, voting, admin)
 │   │   └── poll_test.go
@@ -62,17 +62,21 @@ meetkat/
 │   │   └── sqlite_test.go
 │   └── view/
 │       └── view.go               # LoadTemplates(baseDir)
-├── templates/
-│   ├── layouts/
-│   │   └── base.html
-│   ├── index.html
-│   ├── new.html
-│   ├── poll.html
-│   ├── admin.html
-│   └── 404.html
-├── static/css/
-│   ├── input.css
-│   └── style.css                 # Compiled (gitignored)
+├── web/
+│   ├── templates/
+│   │   ├── layouts/
+│   │   │   └── base.html
+│   │   ├── index.html
+│   │   ├── new.html
+│   │   ├── poll.html
+│   │   ├── admin.html
+│   │   └── 404.html
+│   └── static/
+│       ├── css/
+│       │   ├── input.css
+│       │   └── style.css         # Compiled (gitignored)
+│       └── js/
+│           └── app.js
 ├── data/                         # meetkat.db (runtime, gitignored)
 ├── .air.toml
 ├── Dockerfile
