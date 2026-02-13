@@ -12,10 +12,9 @@
   "theme.light_label": "Helles Design",
   "theme.dark_label": "Dunkles Design",
 
-  "home.badge": "Willkommen bei meetkat",
-  "home.heading_before": "Wo Pläne",
-  "home.heading_highlight": "entstehen",
-  "home.description": "Erdmännchen stressen sich nicht mit Terminplanung — du auch nicht.<br>Meetkat zeigt dir einfach, wer wann kann.<br>Simpel, schnell und erstaunlich spaßig.",
+  "home.heading_before": "Plan like a",
+  "home.heading_highlight": "Meetkat",
+  "home.description": "Erdmännchen kennen keinen Terminstress – warum solltest du?<br>Meetkat zeigt dir im Handumdrehen, wer wann kann.<br>So einfach. So schnell. So spaßig.",
   "home.cta_start": "Jetzt loslegen",
   "home.cta_learn": "Mehr erfahren",
 
