@@ -31,7 +31,8 @@
                 {{ .voteError }}
             </div>
             {{end}}
-            <form method="POST" action="/poll/{{ .poll.AdminID }}/admin/vote" class="mb-8">
+            <form method="POST" action="/poll/{{ .poll.AdminID }}/admin/vote" class="mb-8"
+                  data-confirm-incomplete="{{ call .t "poll.confirm_incomplete" }}">
                 <div data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
                     {{template "vote_table" .}}
                 </div>

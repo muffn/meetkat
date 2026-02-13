@@ -115,6 +115,51 @@
     updateLangButtons();
 })();
 
+// Confirm incomplete vote submission (two-click pattern)
+(function () {
+    document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
+        var btn = form.querySelector('button[type="submit"]');
+        if (!btn) return;
+        var originalText = btn.textContent.trim();
+        var confirmText = form.dataset.confirmIncomplete;
+        var armed = false;
+
+        function hasEmpty() {
+            var inputs = form.querySelectorAll('input[type="hidden"][name^="vote-"]');
+            var empty = false;
+            inputs.forEach(function (input) {
+                if (!input.getAttribute('form') && input.value === '') {
+                    empty = true;
+                }
+            });
+            return empty;
+        }
+
+        function reset() {
+            if (!armed) return;
+            armed = false;
+            btn.textContent = originalText;
+            btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+            btn.classList.add('bg-primary-500', 'hover:bg-primary-600');
+        }
+
+        form.addEventListener('submit', function (e) {
+            if (!hasEmpty()) return;
+            if (armed) { armed = false; return; }
+            e.preventDefault();
+            armed = true;
+            btn.textContent = confirmText;
+            btn.classList.remove('bg-primary-500', 'hover:bg-primary-600');
+            btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+        });
+
+        // Reset when the user interacts with vote buttons
+        form.querySelectorAll('.vote-btn').forEach(function (voteBtn) {
+            voteBtn.addEventListener('click', function () { reset(); });
+        });
+    });
+})();
+
 // Vote button toggles (yes/no)
 (function () {
     document.querySelectorAll('.vote-btn').forEach(function (btn) {

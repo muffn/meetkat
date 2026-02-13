@@ -55,6 +55,7 @@
   "poll.copy": "Copy",
   "poll.copied": "Copied!",
   "poll.error_no_name": "Please enter your name.",
+  "poll.confirm_incomplete": "Incomplete - submit anyway?",
 
   "admin.page_title": "%s – Admin – meetkat",
   "admin.badge": "Admin",
