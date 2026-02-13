@@ -26,6 +26,7 @@ WORKDIR /app
 COPY --from=build /app/meetkat .
 COPY --from=build /app/templates/ ./templates/
 COPY --from=css /app/static/css/style.css ./static/css/
+COPY --from=build /app/static/js/ ./static/js/
 
 RUN mkdir -p /app/data
 
