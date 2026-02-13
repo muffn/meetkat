@@ -31,85 +31,10 @@
                 {{ .voteError }}
             </div>
             {{end}}
-            <form method="POST" action="/poll/{{ .poll.ID }}/vote" class="mb-8">
+            <form method="POST" action="/poll/{{ .poll.ID }}/vote" class="mb-8"
+                  data-confirm-incomplete="{{ call .t "poll.confirm_incomplete" }}">
                 <div data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="border-b border-background-200 bg-background-50">
-                                <th class="px-4 py-3 text-left font-medium text-text-600">{{ call $.t "poll.table_name" }}</th>
-                                {{range .poll.Options}}
-                                <th class="px-4 py-3 text-center font-medium text-text-600">{{ . }}</th>
-                                {{end}}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{range .poll.Votes}}
-                            <tr class="border-b border-background-100">
-                                <td class="px-4 py-3 font-medium text-text-800">{{ .Name }}</td>
-                                {{$responses := .Responses}}
-                                {{range $.poll.Options}}
-                                <td class="px-4 py-3 text-center">
-                                    {{if index $responses .}}
-                                    <span class="inline-flex size-6 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </span>
-                                    {{else}}
-                                    <span class="inline-flex size-6 items-center justify-center rounded-full bg-red-100 text-red-500">
-                                        <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                                        </svg>
-                                    </span>
-                                    {{end}}
-                                </td>
-                                {{end}}
-                            </tr>
-                            {{end}}
-                            <!-- Inline vote input row -->
-                            <tr class="border-b border-background-100 bg-primary-50/50">
-                                <td class="px-4 py-3">
-                                    <label for="vote-name" class="sr-only">{{ call $.t "poll.sr_your_name" }}</label>
-                                    <input type="text" id="vote-name" name="name" placeholder="{{ call $.t "poll.placeholder_name" }}"
-                                           autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other"
-                                           class="w-full min-w-32 rounded-md border border-background-300 bg-white px-2.5 py-1.5 text-base sm:text-sm text-text-800 placeholder-text-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:bg-background-100">
-                                </td>
-                                {{range .poll.Options}}
-                                <td class="px-4 py-3 text-center">
-                                    <input type="hidden" name="vote-{{ . }}" value="">
-                                    <div class="inline-flex flex-col overflow-hidden rounded-full border border-background-300">
-                                        <!-- Yes -->
-                                        <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 bg-background-50 text-background-300 transition hover:bg-green-50 hover:text-green-400"
-                                                data-value="yes" aria-label="{{ call $.t "poll.aria_available" . }}" aria-pressed="false">
-                                            <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
-                                            </svg>
-                                        </button>
-                                        <!-- No -->
-                                        <button type="button" class="vote-btn flex size-8 items-center justify-center bg-background-50 text-background-300 transition hover:bg-red-50 hover:text-red-400"
-                                                data-value="no" aria-label="{{ call $.t "poll.aria_not_available" . }}" aria-pressed="false">
-                                            <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                                {{end}}
-                            </tr>
-                        </tbody>
-                        {{if .poll.Votes}}
-                        <tfoot>
-                            <tr class="bg-background-50">
-                                <td class="px-4 py-3 text-sm font-semibold text-text-700">{{ call $.t "poll.table_total" }}</td>
-                                {{range .poll.Options}}
-                                <td class="px-4 py-3 text-center text-sm font-semibold text-primary-600">
-                                    {{index $.totals .}}
-                                </td>
-                                {{end}}
-                            </tr>
-                        </tfoot>
-                        {{end}}
-                    </table>
+                    {{template "vote_table" .}}
                 </div>
                 <button type="submit"
                         class="mt-4 w-full rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-600 focus:ring-2 focus:ring-primary-300">

@@ -1,0 +1,186 @@
+{{define "vote_table"}}
+<table class="w-full text-sm">
+    <thead>
+        {{if .headerGroups}}
+        <tr class="border-b border-background-100 bg-background-50">
+            <th rowspan="2" class="px-4 py-3 text-left font-medium text-text-600">{{ call $.t "poll.table_name" }}</th>
+            {{range .headerGroups}}
+            <th colspan="{{.Colspan}}" class="px-4 py-2 text-center text-xs font-semibold text-text-500{{if .Label}} border-l border-background-200{{end}}">{{.Label}}</th>
+            {{end}}
+            {{if $.isAdmin}}
+            <th rowspan="2" class="px-4 py-3 text-center font-medium text-text-600"></th>
+            {{end}}
+        </tr>
+        <tr class="border-b border-background-200 bg-background-50">
+            {{range .headerGroups}}{{range .Columns}}
+            <th class="px-4 py-2 text-center text-sm font-medium text-text-600">{{.Label}}</th>
+            {{end}}{{end}}
+        </tr>
+        {{else}}
+        <tr class="border-b border-background-200 bg-background-50">
+            <th class="px-4 py-3 text-left font-medium text-text-600">{{ call $.t "poll.table_name" }}</th>
+            {{range .poll.Options}}
+            <th class="px-4 py-3 text-center font-medium text-text-600">{{ . }}</th>
+            {{end}}
+            {{if .isAdmin}}
+            <th class="px-4 py-3 text-center font-medium text-text-600"></th>
+            {{end}}
+        </tr>
+        {{end}}
+    </thead>
+    <tbody>
+        {{if .poll.Votes}}
+        {{range $idx, $vote := .poll.Votes}}
+        <!-- Display row -->
+        <tr {{if $.isAdmin}}id="display-{{$idx}}"{{end}} class="border-b border-background-100">
+            <td class="max-w-40 wrap-break-word px-4 py-3 font-medium text-text-800">{{ $vote.Name }}</td>
+            {{$responses := $vote.Responses}}
+            {{range $.poll.Options}}
+            <td class="px-4 py-3 text-center">
+                {{if index $responses .}}
+                <span class="inline-flex size-6 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
+                    </svg>
+                </span>
+                {{else}}
+                <span class="inline-flex size-6 items-center justify-center rounded-full bg-red-100 text-red-500">
+                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                    </svg>
+                </span>
+                {{end}}
+            </td>
+            {{end}}
+            {{if $.isAdmin}}
+            <td class="px-4 py-3 text-center">
+                <div class="inline-flex gap-1">
+                    <button type="button" onclick="startEdit({{$idx}})"
+                            class="rounded-md px-2 py-1 text-xs font-medium text-primary-600 transition hover:bg-primary-50 hover:text-primary-700"
+                            title="{{ call $.t "admin.edit_title" $vote.Name }}">
+                        {{ call $.t "admin.edit" }}
+                    </button>
+                    <form method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove" class="inline">
+                        <input type="hidden" name="voter_name" value="{{ $vote.Name }}">
+                        <button type="submit"
+                                class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
+                                title="{{ call $.t "admin.remove_title" $vote.Name }}">
+                            {{ call $.t "admin.remove" }}
+                        </button>
+                    </form>
+                </div>
+            </td>
+            {{end}}
+        </tr>
+        {{if $.isAdmin}}
+        <!-- Edit row (hidden by default) -->
+        <tr id="edit-{{$idx}}" class="hidden border-b border-background-100 bg-primary-50/50 dark:bg-primary-950/20">
+            <td class="px-4 py-3">
+                <input type="text" name="name" value="{{ $vote.Name }}" form="edit-form-{{$idx}}"
+                       autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other"
+                       class="w-full min-w-32 rounded-md border border-background-300 bg-white px-2.5 py-1.5 text-sm text-text-800 placeholder-text-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:bg-background-100">
+                <input type="hidden" name="old_name" value="{{ $vote.Name }}" form="edit-form-{{$idx}}">
+            </td>
+            {{range $.poll.Options}}
+            <td class="px-4 py-3 text-center">
+                <input type="hidden" name="vote-{{ . }}" value="{{if index $responses .}}yes{{else}}no{{end}}" form="edit-form-{{$idx}}">
+                <div class="inline-flex flex-col overflow-hidden rounded-full border border-background-300">
+                    <!-- Yes -->
+                    <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 transition hover:bg-green-50 hover:text-green-400 {{if index $responses .}}bg-green-100 text-green-600{{else}}bg-background-50 text-background-300{{end}}"
+                            data-value="yes" aria-pressed="{{if index $responses .}}true{{else}}false{{end}}">
+                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <!-- No -->
+                    <button type="button" class="vote-btn flex size-8 items-center justify-center transition hover:bg-red-50 hover:text-red-400 {{if not (index $responses .)}}bg-red-100 text-red-500{{else}}bg-background-50 text-background-300{{end}}"
+                            data-value="no" aria-pressed="{{if not (index $responses .)}}true{{else}}false{{end}}">
+                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+            {{end}}
+            <td class="px-4 py-3 text-center">
+                <div class="inline-flex gap-1">
+                    <form id="edit-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/edit">
+                        <button type="submit"
+                                class="rounded-md bg-primary-500 px-2 py-1 text-xs font-medium text-white transition hover:bg-primary-600">
+                            {{ call $.t "admin.save" }}
+                        </button>
+                    </form>
+                    <button type="button" onclick="cancelEdit({{$idx}})"
+                            class="rounded-md px-2 py-1 text-xs font-medium text-text-500 transition hover:bg-background-100 hover:text-text-700">
+                        {{ call $.t "admin.cancel" }}
+                    </button>
+                </div>
+            </td>
+        </tr>
+        {{end}}
+        {{end}}
+        {{else}}
+        {{if .isAdmin}}
+        <tr>
+            <td colspan="99" class="px-4 py-8 text-center text-sm text-text-400">
+                {{ call $.t "admin.empty" }}
+            </td>
+        </tr>
+        {{end}}
+        {{end}}
+        <!-- Inline vote input row -->
+        <tr class="border-b border-background-100 bg-primary-50/50">
+            <td class="px-4 py-3">
+                <label for="vote-name" class="sr-only">{{ call $.t "poll.sr_your_name" }}</label>
+                <input type="text" id="vote-name" name="name" placeholder="{{ call $.t "poll.placeholder_name" }}"
+                       autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other"
+                       class="w-full min-w-32 rounded-md border border-background-300 bg-white px-2.5 py-1.5 text-base sm:text-sm text-text-800 placeholder-text-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:bg-background-100">
+            </td>
+            {{range .poll.Options}}
+            <td class="px-4 py-3 text-center">
+                <input type="hidden" name="vote-{{ . }}" value="">
+                <div class="inline-flex flex-col overflow-hidden rounded-full border border-background-300">
+                    <!-- Yes -->
+                    <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 bg-background-50 text-background-300 transition hover:bg-green-50 hover:text-green-400"
+                            data-value="yes" aria-label="{{ call $.t "poll.aria_available" . }}" aria-pressed="false">
+                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <!-- No -->
+                    <button type="button" class="vote-btn flex size-8 items-center justify-center bg-background-50 text-background-300 transition hover:bg-red-50 hover:text-red-400"
+                            data-value="no" aria-label="{{ call $.t "poll.aria_not_available" . }}" aria-pressed="false">
+                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+            {{end}}
+            {{if .isAdmin}}
+            <td></td>
+            {{end}}
+        </tr>
+    </tbody>
+    {{if .poll.Votes}}
+    <tfoot>
+        <tr class="bg-background-50">
+            <td class="px-4 py-3 text-sm font-semibold text-text-700">{{ call $.t "poll.table_total" }}</td>
+            {{range .poll.Options}}
+            <td class="px-4 py-3 text-center text-sm font-semibold {{if and $.winners (index $.winners .)}}text-amber-600{{else}}text-primary-600{{end}}">
+                <span class="relative inline-block">
+                    {{if and $.winners (index $.winners .)}}
+                    <span class="absolute -left-4 top-1/2 size-3 -translate-y-1/2 bg-amber-400" style="-webkit-mask-image:url(../../static/icons/star.svg);mask-image:url(../../static/icons/star.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
+                    {{end}}
+                    {{index $.totals .}}
+                </span>
+            </td>
+            {{end}}
+            {{if $.isAdmin}}
+            <td></td>
+            {{end}}
+        </tr>
+    </tfoot>
+    {{end}}
+</table>
+{{end}}

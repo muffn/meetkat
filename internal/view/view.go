@@ -21,9 +21,21 @@ func LoadTemplates(baseDir string) map[string]*template.Template {
 		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
 	}
 
+	partial := filepath.Join(baseDir, "web", "templates", "partials", "vote_table.html")
+
+	// Pages that need the vote_table partial
+	needsPartial := map[string]bool{
+		"poll.html":  true,
+		"admin.html": true,
+	}
+
 	tmpls := make(map[string]*template.Template, len(pages))
 	for name, path := range pages {
-		tmpls[name] = template.Must(template.New("").Funcs(funcs).ParseFiles(base, path))
+		if needsPartial[name] {
+			tmpls[name] = template.Must(template.New("").Funcs(funcs).ParseFiles(base, path, partial))
+		} else {
+			tmpls[name] = template.Must(template.New("").Funcs(funcs).ParseFiles(base, path))
+		}
 	}
 	return tmpls
 }

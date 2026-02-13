@@ -50,6 +50,7 @@ func main() {
 	r.GET("/poll/:id", ph.ShowPoll)
 	r.POST("/poll/:id/vote", ph.SubmitVote)
 	r.GET("/poll/:id/admin", ph.ShowAdmin)
+	r.POST("/poll/:id/admin/vote", ph.SubmitAdminVote)
 	r.POST("/poll/:id/admin/remove", ph.RemoveVote)
 	r.POST("/poll/:id/admin/delete", ph.DeletePoll)
 	r.POST("/poll/:id/admin/edit", ph.UpdateVote)

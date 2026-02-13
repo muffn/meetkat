@@ -55,6 +55,7 @@
   "poll.copy": "Kopieren",
   "poll.copied": "Kopiert!",
   "poll.error_no_name": "Bitte gib deinen Namen ein.",
+  "poll.confirm_incomplete": "Unvollständig - trotzdem absenden?",
 
   "admin.page_title": "%s – Admin – meetkat",
   "admin.badge": "Admin",
@@ -89,5 +90,26 @@
 
   "error.generic": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
 
-  "format.date": "02.01.2006"
+  "format.date": "02.01.2006",
+
+  "month.1": "Jan",
+  "month.2": "Feb",
+  "month.3": "Mär",
+  "month.4": "Apr",
+  "month.5": "Mai",
+  "month.6": "Jun",
+  "month.7": "Jul",
+  "month.8": "Aug",
+  "month.9": "Sep",
+  "month.10": "Okt",
+  "month.11": "Nov",
+  "month.12": "Dez",
+
+  "weekday.0": "So",
+  "weekday.1": "Mo",
+  "weekday.2": "Di",
+  "weekday.3": "Mi",
+  "weekday.4": "Do",
+  "weekday.5": "Fr",
+  "weekday.6": "Sa"
 }

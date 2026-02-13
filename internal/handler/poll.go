@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"meetkat/internal/poll"
+	"meetkat/internal/view"
 
 	"github.com/gin-gonic/gin"
 )
@@ -101,10 +102,13 @@ func (h *PollHandler) ShowPoll(c *gin.Context) {
 
 	totals := poll.Totals(p)
 	renderHTML(h.tmpls, c, http.StatusOK, "poll.html", gin.H{
-		"title":  fmt.Sprintf(loc.T("poll.page_title"), p.Title),
-		"poll":   p,
-		"totals": totals,
-		"url":    fmt.Sprintf("%s/poll/%s", c.Request.Host, p.ID),
+		"title":        fmt.Sprintf(loc.T("poll.page_title"), p.Title),
+		"poll":         p,
+		"totals":       totals,
+		"winners":      view.WinningOptions(totals),
+		"url":          fmt.Sprintf("%s/poll/%s", c.Request.Host, p.ID),
+		"isAdmin":      false,
+		"headerGroups": view.BuildDateHeaders(p.Options, loc.T),
 	})
 }
 
@@ -127,11 +131,14 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 	if name == "" {
 		totals := poll.Totals(p)
 		renderHTML(h.tmpls, c, http.StatusUnprocessableEntity, "poll.html", gin.H{
-			"title":     fmt.Sprintf(loc.T("poll.page_title"), p.Title),
-			"poll":      p,
-			"totals":    totals,
-			"url":       fmt.Sprintf("%s/poll/%s", c.Request.Host, p.ID),
-			"voteError": loc.T("poll.error_no_name"),
+			"title":        fmt.Sprintf(loc.T("poll.page_title"), p.Title),
+			"poll":         p,
+			"totals":       totals,
+			"winners":      view.WinningOptions(totals),
+			"url":          fmt.Sprintf("%s/poll/%s", c.Request.Host, p.ID),
+			"voteError":    loc.T("poll.error_no_name"),
+			"isAdmin":      false,
+			"headerGroups": view.BuildDateHeaders(p.Options, loc.T),
 		})
 		return
 	}
@@ -173,12 +180,67 @@ func (h *PollHandler) ShowAdmin(c *gin.Context) {
 
 	totals := poll.Totals(p)
 	renderHTML(h.tmpls, c, http.StatusOK, "admin.html", gin.H{
-		"title":    fmt.Sprintf(loc.T("admin.page_title"), p.Title),
-		"poll":     p,
-		"totals":   totals,
-		"pollURL":  fmt.Sprintf("%s/poll/%s", baseURL, p.ID),
-		"adminURL": fmt.Sprintf("%s/poll/%s/admin", baseURL, p.AdminID),
+		"title":        fmt.Sprintf(loc.T("admin.page_title"), p.Title),
+		"poll":         p,
+		"totals":       totals,
+		"winners":      view.WinningOptions(totals),
+		"pollURL":      fmt.Sprintf("%s/poll/%s", baseURL, p.ID),
+		"adminURL":     fmt.Sprintf("%s/poll/%s/admin", baseURL, p.AdminID),
+		"isAdmin":      true,
+		"headerGroups": view.BuildDateHeaders(p.Options, loc.T),
 	})
+}
+
+func (h *PollHandler) SubmitAdminVote(c *gin.Context) {
+	loc := LocalizerFromCtx(c)
+	adminID := c.Param("id")
+
+	p, err := h.svc.GetByAdminID(adminID)
+	if err != nil {
+		log.Printf("get poll by admin id error: %v", err)
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
+		return
+	}
+	if p == nil {
+		h.renderNotFound(c)
+		return
+	}
+
+	name := strings.TrimSpace(c.PostForm("name"))
+	if name == "" {
+		scheme := "http"
+		if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
+			scheme = "https"
+		}
+		baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
+
+		totals := poll.Totals(p)
+		renderHTML(h.tmpls, c, http.StatusUnprocessableEntity, "admin.html", gin.H{
+			"title":        fmt.Sprintf(loc.T("admin.page_title"), p.Title),
+			"poll":         p,
+			"totals":       totals,
+			"winners":      view.WinningOptions(totals),
+			"pollURL":      fmt.Sprintf("%s/poll/%s", baseURL, p.ID),
+			"adminURL":     fmt.Sprintf("%s/poll/%s/admin", baseURL, p.AdminID),
+			"isAdmin":      true,
+			"voteError":    loc.T("poll.error_no_name"),
+			"headerGroups": view.BuildDateHeaders(p.Options, loc.T),
+		})
+		return
+	}
+
+	responses := make(map[string]bool, len(p.Options))
+	for _, opt := range p.Options {
+		responses[opt] = c.PostForm("vote-"+opt) == "yes"
+	}
+
+	if err := h.svc.AddVote(p.ID, name, responses); err != nil {
+		log.Printf("add vote error: %v", err)
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 }
 
 func (h *PollHandler) RemoveVote(c *gin.Context) {
