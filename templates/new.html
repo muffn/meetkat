@@ -168,6 +168,11 @@ function initRow(row) {
 
     proxy.addEventListener('change', function () {
         input.value = proxy.value;
+        sortDateRows();
+    });
+
+    input.addEventListener('change', function () {
+        sortDateRows();
     });
 
     if (toggle && !toggle._bound) {
