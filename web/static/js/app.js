@@ -115,6 +115,35 @@
     updateLangButtons();
 })();
 
+// Enable/disable submit button based on name input + red outline hint
+(function () {
+    document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
+        var nameInput = form.querySelector('input[name="name"]');
+        var btn = form.querySelector('button[type="submit"]');
+        if (!nameInput || !btn) return;
+
+        function update() {
+            var hasName = nameInput.value.trim() !== '';
+            btn.disabled = !hasName;
+            if (hasName) {
+                nameInput.classList.remove('border-red-400', 'ring-2', 'ring-red-100');
+            }
+        }
+
+        nameInput.addEventListener('input', update);
+        nameInput.addEventListener('blur', function () {
+            if (!nameInput.value.trim()) {
+                nameInput.classList.add('border-red-400', 'ring-2', 'ring-red-100');
+            }
+        });
+        nameInput.addEventListener('focus', function () {
+            nameInput.classList.remove('border-red-400', 'ring-2', 'ring-red-100');
+        });
+
+        update();
+    });
+})();
+
 // Confirm incomplete vote submission (two-click pattern)
 (function () {
     document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
@@ -144,8 +173,6 @@
         }
 
         form.addEventListener('submit', function (e) {
-            var nameInput = form.querySelector('input[name="name"]');
-            if (!nameInput || !nameInput.value.trim()) return;
             if (!hasEmpty()) return;
             if (armed) { armed = false; return; }
             e.preventDefault();

@@ -26,18 +26,13 @@
             </div>
 
             <!-- Voting table with inline vote form -->
-            {{if .voteError}}
-            <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {{ .voteError }}
-            </div>
-            {{end}}
             <form method="POST" action="/poll/{{ .poll.AdminID }}/admin/vote" class="mb-8"
                   data-confirm-incomplete="{{ call .t "poll.confirm_incomplete" }}">
                 <div data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
                     {{template "vote_table" .}}
                 </div>
-                <button type="submit"
-                        class="mt-4 w-full rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-600 focus:ring-2 focus:ring-primary-300">
+                <button type="submit" disabled
+                        class="mt-4 w-full rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-600 focus:ring-2 focus:ring-primary-300 disabled:cursor-not-allowed disabled:opacity-50">
                     {{ call $.t "poll.submit_vote" }}
                 </button>
             </form>
