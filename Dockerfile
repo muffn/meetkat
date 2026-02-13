@@ -5,9 +5,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY static/css/input.css ./static/css/
-COPY templates/ ./templates/
-RUN npx @tailwindcss/cli -i static/css/input.css -o static/css/style.css --minify
+COPY web/static/css/input.css ./web/static/css/
+COPY web/templates/ ./web/templates/
+RUN npx @tailwindcss/cli -i web/static/css/input.css -o web/static/css/style.css --minify
 
 FROM golang:1.25-alpine AS build
 
@@ -24,9 +24,9 @@ FROM alpine:3.21
 WORKDIR /app
 
 COPY --from=build /app/meetkat .
-COPY --from=build /app/templates/ ./templates/
-COPY --from=css /app/static/css/style.css ./static/css/
-COPY --from=build /app/static/js/ ./static/js/
+COPY --from=build /app/web/templates/ ./web/templates/
+COPY --from=css /app/web/static/css/style.css ./web/static/css/
+COPY --from=build /app/web/static/js/ ./web/static/js/
 
 RUN mkdir -p /app/data
 

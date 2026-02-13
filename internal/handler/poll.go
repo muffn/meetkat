@@ -23,27 +23,11 @@ func NewPollHandler(svc *poll.Service, tmpls map[string]*template.Template) *Pol
 	return &PollHandler{svc: svc, tmpls: tmpls}
 }
 
-func (h *PollHandler) renderHTML(c *gin.Context, code int, name string, data gin.H) {
-	tmpl, ok := h.tmpls[name]
-	if !ok {
-		c.String(http.StatusInternalServerError, "template %q not found", name)
-		return
-	}
-	loc := LocalizerFromCtx(c)
-	data["t"] = loc.T
-	data["lang"] = loc.Lang()
-	c.Status(code)
-	c.Header("Content-Type", "text/html; charset=utf-8")
-	if err := tmpl.ExecuteTemplate(c.Writer, name, data); err != nil {
-		log.Printf("template render error: %v", err)
-	}
-}
-
 func (h *PollHandler) ShowNew(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
 	today := time.Now().Format("2006-01-02")
 	tomorrow := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
-	h.renderHTML(c, http.StatusOK, "new.html", gin.H{
+	renderHTML(h.tmpls, c, http.StatusOK, "new.html", gin.H{
 		"title":     loc.T("new.page_title"),
 		"formDates": []string{today, tomorrow},
 	})
@@ -72,7 +56,7 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 	}
 
 	if len(errors) > 0 {
-		h.renderHTML(c, http.StatusUnprocessableEntity, "new.html", gin.H{
+		renderHTML(h.tmpls, c, http.StatusUnprocessableEntity, "new.html", gin.H{
 			"title":           loc.T("new.page_title"),
 			"errors":          errors,
 			"formTitle":       title,
@@ -95,7 +79,7 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 
 func (h *PollHandler) renderNotFound(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
-	h.renderHTML(c, http.StatusNotFound, "404.html", gin.H{
+	renderHTML(h.tmpls, c, http.StatusNotFound, "404.html", gin.H{
 		"title": loc.T("notfound.page_title"),
 	})
 }
@@ -116,7 +100,7 @@ func (h *PollHandler) ShowPoll(c *gin.Context) {
 	}
 
 	totals := poll.Totals(p)
-	h.renderHTML(c, http.StatusOK, "poll.html", gin.H{
+	renderHTML(h.tmpls, c, http.StatusOK, "poll.html", gin.H{
 		"title":  fmt.Sprintf(loc.T("poll.page_title"), p.Title),
 		"poll":   p,
 		"totals": totals,
@@ -142,7 +126,7 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 	name := strings.TrimSpace(c.PostForm("name"))
 	if name == "" {
 		totals := poll.Totals(p)
-		h.renderHTML(c, http.StatusUnprocessableEntity, "poll.html", gin.H{
+		renderHTML(h.tmpls, c, http.StatusUnprocessableEntity, "poll.html", gin.H{
 			"title":     fmt.Sprintf(loc.T("poll.page_title"), p.Title),
 			"poll":      p,
 			"totals":    totals,
@@ -188,7 +172,7 @@ func (h *PollHandler) ShowAdmin(c *gin.Context) {
 	baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
 
 	totals := poll.Totals(p)
-	h.renderHTML(c, http.StatusOK, "admin.html", gin.H{
+	renderHTML(h.tmpls, c, http.StatusOK, "admin.html", gin.H{
 		"title":    fmt.Sprintf(loc.T("admin.page_title"), p.Title),
 		"poll":     p,
 		"totals":   totals,

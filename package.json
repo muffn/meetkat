@@ -1,8 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "build:css": "tailwindcss -i static/css/input.css -o static/css/style.css --minify",
-    "dev:css": "tailwindcss -i static/css/input.css -o static/css/style.css --watch"
+    "build:css": "tailwindcss -i web/static/css/input.css -o web/static/css/style.css --minify",
+    "dev:css": "tailwindcss -i web/static/css/input.css -o web/static/css/style.css --watch"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.0.0"

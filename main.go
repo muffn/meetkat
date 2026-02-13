@@ -41,7 +41,7 @@ func main() {
 	hh := handler.NewHomeHandler(tmpls)
 
 	r := gin.Default()
-	r.Static("/static", "./static")
+	r.Static("/static", "./web/static")
 	r.Use(middleware.LangCookie(translator))
 
 	r.GET("/", hh.ShowHome)

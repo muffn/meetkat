@@ -23,13 +23,13 @@ Activate this skill when:
 
 This project uses **Tailwind CSS v4** with a build step via `@tailwindcss/cli`. No CDN.
 
-- **Source CSS**: `static/css/input.css` — contains `@import "tailwindcss"`, `@theme`, `@variant`, and CSS variables
-- **Compiled CSS**: `static/css/style.css` — generated output (gitignored)
+- **Source CSS**: `web/static/css/input.css` — contains `@import "tailwindcss"`, `@theme`, `@variant`, and CSS variables
+- **Compiled CSS**: `web/static/css/style.css` — generated output (gitignored)
 - **Build**: `npm run build:css` (minified) / `npm run dev:css` (watch mode)
 - **Config**: CSS-first via `@theme` in `input.css` (no `tailwind.config.js`)
 - **Dark mode**: Class-based via `@variant dark (&:where(.dark, .dark *));`
 - **Templating**: Go `html/template` with `{{define}}`, `{{template}}`, `{{block}}` directives
-- **Templates**: `templates/layouts/base.html` (base layout), `templates/*.html` (pages)
+- **Templates**: `web/templates/layouts/base.html` (base layout), `web/templates/*.html` (pages)
 - **Static serving**: Gin serves `/static` from `./static` directory
 
 ## Basic Usage

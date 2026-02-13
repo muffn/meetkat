@@ -34,25 +34,37 @@ Goals:
 
 ```
 meetkat/
-├── main.go                  # Application entrypoint (single-file for now)
+├── main.go                  # Application entrypoint
 ├── go.mod / go.sum          # Go 1.25, Gin dependency
 ├── package.json             # Node deps (@tailwindcss/cli)
-├── templates/               # Go html/template files
-│   ├── layouts/
-│   │   └── base.html        # Base layout (head, theme switcher, content block)
-│   └── index.html           # Home / hero page
-├── static/                  # Static assets served at /static
-│   └── css/
-│       ├── input.css         # Tailwind source (theme, variables, dark mode)
-│       └── style.css         # Compiled output (gitignored)
+├── internal/                # Domain code (handlers, services, repositories)
+│   ├── config/
+│   ├── handler/
+│   ├── i18n/
+│   ├── middleware/
+│   ├── poll/
+│   ├── sqlite/
+│   └── view/
+├── web/                     # Web assets (templates + static files)
+│   ├── templates/           # Go html/template files
+│   │   ├── layouts/
+│   │   │   └── base.html    # Base layout (head, theme switcher, content block)
+│   │   ├── index.html       # Home / hero page
+│   │   ├── new.html         # Create poll form
+│   │   ├── poll.html        # Vote on a poll
+│   │   ├── admin.html       # Admin view
+│   │   └── 404.html         # Not found
+│   └── static/              # Static assets served at /static
+│       ├── css/
+│       │   ├── input.css    # Tailwind source (theme, variables, dark mode)
+│       │   └── style.css    # Compiled output (gitignored)
+│       └── js/
+│           └── app.js
+├── data/                    # meetkat.db (runtime, gitignored)
 ├── .air.toml                # Air live-reload config
 ├── Dockerfile               # Multi-stage build (CSS → Go → Alpine)
 └── docker-compose.yml       # Docker Compose for deployment
 ```
-
-**Planned additions** (not yet created):
-- `internal/` – domain code (handlers, services, repositories) once the app grows beyond `main.go`.
-- `data/` – `meetkat.db` (SQLite) once persistence is added.
 
 For generic Go project-structure patterns, see `.claude/skills/golang/references/project-structure.md`.
 

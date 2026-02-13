@@ -8,13 +8,13 @@ import (
 // LoadTemplates parses all page templates against the base layout.
 // baseDir is the project root (e.g. "." from main.go, "../.." from internal/handler/ tests).
 func LoadTemplates(baseDir string) map[string]*template.Template {
-	base := filepath.Join(baseDir, "templates", "layouts", "base.html")
+	base := filepath.Join(baseDir, "web", "templates", "layouts", "base.html")
 	pages := map[string]string{
-		"index.html": filepath.Join(baseDir, "templates", "index.html"),
-		"new.html":   filepath.Join(baseDir, "templates", "new.html"),
-		"poll.html":  filepath.Join(baseDir, "templates", "poll.html"),
-		"admin.html": filepath.Join(baseDir, "templates", "admin.html"),
-		"404.html":   filepath.Join(baseDir, "templates", "404.html"),
+		"index.html": filepath.Join(baseDir, "web", "templates", "index.html"),
+		"new.html":   filepath.Join(baseDir, "web", "templates", "new.html"),
+		"poll.html":  filepath.Join(baseDir, "web", "templates", "poll.html"),
+		"admin.html": filepath.Join(baseDir, "web", "templates", "admin.html"),
+		"404.html":   filepath.Join(baseDir, "web", "templates", "404.html"),
 	}
 
 	funcs := template.FuncMap{
