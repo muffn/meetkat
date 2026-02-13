@@ -26,7 +26,8 @@
             </div>
 
             <!-- Voting table (read-only with remove buttons) -->
-            <div class="mb-8 overflow-x-auto rounded-lg border border-background-200">
+            <div class="relative mb-8">
+            <div id="admin-vote-table" class="overflow-x-auto rounded-lg border border-background-200">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-background-200 bg-background-50">
@@ -147,6 +148,12 @@
                     {{end}}
                 </table>
             </div>
+            <div id="admin-scroll-fade"
+                 class="pointer-events-none absolute inset-y-0 right-0 w-12 rounded-r-lg
+                        bg-linear-to-l from-white dark:from-background-100
+                        transition-opacity duration-300">
+            </div>
+            </div>
 
             <!-- Share section -->
             <div class="space-y-4">
@@ -240,5 +247,21 @@ function hideDeleteConfirm() {
     document.getElementById('delete-confirm').classList.add('hidden');
     document.getElementById('delete-default').classList.remove('hidden');
 }
+
+(function() {
+    var table = document.getElementById('admin-vote-table');
+    var fade = document.getElementById('admin-scroll-fade');
+    if (!table || !fade) return;
+
+    function update() {
+        var overflows = table.scrollWidth > table.clientWidth;
+        var atEnd = table.scrollLeft + table.clientWidth >= table.scrollWidth - 1;
+        fade.classList.toggle('opacity-0', !overflows || atEnd);
+    }
+
+    table.addEventListener('scroll', update);
+    window.addEventListener('resize', update);
+    update();
+})();
 </script>
 {{end}}
