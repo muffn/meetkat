@@ -25,16 +25,18 @@ jobs:
       - name: Determine next version
         id: version
         run: |
-          # Use globally sorted tags (not git describe, which only sees ancestors of HEAD)
-          CURRENT=$(git tag -l 'v*' --sort=-v:refname | head -1)
+          # Match only proper semver tags (v1.2.3), sorted by version descending
+          CURRENT=$(git tag -l --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
           if [ -z "$CURRENT" ]; then
             CURRENT="v0.0.0"
           fi
           echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
 
-          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
-          MINOR=$(echo "$CURRENT" | cut -d. -f2)
-          PATCH=$(echo "$CURRENT" | cut -d. -f3)
+          # Strip the v prefix for arithmetic
+          VERSION="${CURRENT#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
 
           if git log "${CURRENT}..HEAD" --pretty=%B 2>/dev/null | grep -qE '(BREAKING CHANGE|^.*!:)'; then
             MINOR=$((MINOR + 1))
@@ -43,7 +45,7 @@ jobs:
             PATCH=$((PATCH + 1))
           fi
 
-          NEW_TAG="${MAJOR}.${MINOR}.${PATCH}"
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
           echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
           echo "Bumping $CURRENT → $NEW_TAG"
 
