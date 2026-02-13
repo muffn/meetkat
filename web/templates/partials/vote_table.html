@@ -33,7 +33,7 @@
         {{range $idx, $vote := .poll.Votes}}
         <!-- Display row -->
         <tr {{if $.isAdmin}}id="display-{{$idx}}"{{end}} class="border-b border-background-100">
-            <td class="px-4 py-3 font-medium text-text-800">{{ $vote.Name }}</td>
+            <td class="max-w-40 wrap-break-word px-4 py-3 font-medium text-text-800">{{ $vote.Name }}</td>
             {{$responses := $vote.Responses}}
             {{range $.poll.Options}}
             <td class="px-4 py-3 text-center">
