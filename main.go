@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -49,8 +50,14 @@ func main() {
 	r.POST("/new", ph.CreatePoll)
 	r.GET("/poll/:id", ph.ShowPoll)
 	r.POST("/poll/:id/vote", ph.SubmitVote)
+	r.GET("/poll/:id/vote", func(c *gin.Context) {
+		c.Redirect(http.StatusSeeOther, "/poll/"+c.Param("id"))
+	})
 	r.GET("/poll/:id/admin", ph.ShowAdmin)
 	r.POST("/poll/:id/admin/vote", ph.SubmitAdminVote)
+	r.GET("/poll/:id/admin/vote", func(c *gin.Context) {
+		c.Redirect(http.StatusSeeOther, "/poll/"+c.Param("id")+"/admin")
+	})
 	r.POST("/poll/:id/admin/remove", ph.RemoveVote)
 	r.POST("/poll/:id/admin/delete", ph.DeletePoll)
 	r.POST("/poll/:id/admin/edit", ph.UpdateVote)

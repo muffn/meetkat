@@ -144,6 +144,8 @@
         }
 
         form.addEventListener('submit', function (e) {
+            var nameInput = form.querySelector('input[name="name"]');
+            if (!nameInput || !nameInput.value.trim()) return;
             if (!hasEmpty()) return;
             if (armed) { armed = false; return; }
             e.preventDefault();
