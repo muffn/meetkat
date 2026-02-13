@@ -217,6 +217,33 @@
     })();
 </script>
 {{block "content" .}}{{end}}
+<script>
+    (function () {
+        document.querySelectorAll('.vote-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var td = btn.closest('td');
+                var hidden = td.querySelector('input[type="hidden"]');
+                var buttons = td.querySelectorAll('.vote-btn');
+
+                hidden.value = btn.dataset.value;
+
+                buttons.forEach(function (b) {
+                    b.classList.remove('bg-green-100', 'text-green-600', 'bg-red-100', 'text-red-500');
+                    b.classList.add('bg-background-50', 'text-background-300');
+                    b.setAttribute('aria-pressed', 'false');
+                });
+
+                btn.classList.remove('bg-background-50', 'text-background-300');
+                if (btn.dataset.value === 'yes') {
+                    btn.classList.add('bg-green-100', 'text-green-600');
+                } else {
+                    btn.classList.add('bg-red-100', 'text-red-500');
+                }
+                btn.setAttribute('aria-pressed', 'true');
+            });
+        });
+    })();
+</script>
 </body>
 </html>
 {{end}}

@@ -89,27 +89,22 @@
                             </td>
                             {{range $.poll.Options}}
                             <td class="px-4 py-3 text-center">
+                                <input type="hidden" name="vote-{{ . }}" value="{{if index $responses .}}yes{{else}}no{{end}}" form="edit-form-{{$idx}}">
                                 <div class="inline-flex flex-col overflow-hidden rounded-full border border-background-300">
                                     <!-- Yes -->
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="vote-{{ . }}" value="yes" form="edit-form-{{$idx}}" class="peer sr-only"
-                                               {{if index $responses .}}checked{{end}}>
-                                        <span class="flex size-8 items-center justify-center border-b border-background-300 bg-background-50 text-background-300 transition hover:bg-green-50 hover:text-green-400 peer-checked:bg-green-100 peer-checked:text-green-600 peer-focus-visible:ring-2 peer-focus-visible:ring-primary-300">
-                                            <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
-                                            </svg>
-                                        </span>
-                                    </label>
+                                    <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 transition hover:bg-green-50 hover:text-green-400 {{if index $responses .}}bg-green-100 text-green-600{{else}}bg-background-50 text-background-300{{end}}"
+                                            data-value="yes" aria-pressed="{{if index $responses .}}true{{else}}false{{end}}">
+                                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
                                     <!-- No -->
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="vote-{{ . }}" value="no" form="edit-form-{{$idx}}" class="peer sr-only"
-                                               {{if not (index $responses .)}}checked{{end}}>
-                                        <span class="flex size-8 items-center justify-center bg-background-50 text-background-300 transition hover:bg-red-50 hover:text-red-400 peer-checked:bg-red-100 peer-checked:text-red-500 peer-focus-visible:ring-2 peer-focus-visible:ring-primary-300">
-                                            <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                                            </svg>
-                                        </span>
-                                    </label>
+                                    <button type="button" class="vote-btn flex size-8 items-center justify-center transition hover:bg-red-50 hover:text-red-400 {{if not (index $responses .)}}bg-red-100 text-red-500{{else}}bg-background-50 text-background-300{{end}}"
+                                            data-value="no" aria-pressed="{{if not (index $responses .)}}true{{else}}false{{end}}">
+                                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </td>
                             {{end}}
