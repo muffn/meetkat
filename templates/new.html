@@ -74,47 +74,6 @@
                                 </button>
                             </div>
                             {{end}}
-                        {{else}}
-                            <div class="date-row grid grid-cols-[1fr_auto] items-center gap-2">
-                                <label class="relative block">
-                                    <span class="sr-only">{{ call $.t "new.sr_date_option" }}</span>
-                                    <input type="date" name="dates[]"
-                                           class="date-input block w-full appearance-none rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">
-                                    <button type="button"
-                                            class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex"
-                                            tabindex="-1" aria-label="{{ call $.t "new.aria_open_calendar" }}">
-                                        <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </button>
-                                </label>
-                                <button type="button" onclick="removeDate(this)"
-                                        class="date-delete flex items-center justify-center self-stretch rounded-lg border border-background-300 px-2 text-text-400 transition hover:border-accent-300 hover:text-accent-500">
-                                    <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            <div class="date-row grid grid-cols-[1fr_auto] items-center gap-2">
-                                <label class="relative block">
-                                    <span class="sr-only">{{ call $.t "new.sr_date_option" }}</span>
-                                    <input type="date" name="dates[]"
-                                           class="date-input block w-full appearance-none rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">
-                                    <button type="button"
-                                            class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex"
-                                            tabindex="-1" aria-label="{{ call $.t "new.aria_open_calendar" }}">
-                                        <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>
-                                        </svg>
-                                    </button>
-                                </label>
-                                <button type="button" onclick="removeDate(this)"
-                                        class="date-delete flex items-center justify-center self-stretch rounded-lg border border-background-300 px-2 text-text-400 transition hover:border-accent-300 hover:text-accent-500">
-                                    <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                    </svg>
-                                </button>
-                            </div>
                         {{end}}
                     </div>
 
@@ -178,11 +137,6 @@ function initRow(row) {
 
     proxy.addEventListener('change', function () {
         input.value = proxy.value;
-        sortDateRows();
-    });
-
-    input.addEventListener('change', function () {
-        sortDateRows();
     });
 
     if (toggle && !toggle._bound) {
@@ -218,12 +172,11 @@ function createRow(dateValue) {
         '</button>';
     container.appendChild(row);
     initRow(row);
-    sortDateRows();
     updateDeleteButtons();
 }
 
 function addDate() {
-    createRow('');
+    createRow(formatDate(new Date()));
 }
 
 function getLastDate() {
@@ -248,19 +201,6 @@ function addDateOffset(days) {
     createRow(formatDate(base));
 }
 
-function sortDateRows() {
-    var container = document.getElementById('dates-container');
-    var rows = Array.from(container.querySelectorAll('.date-row'));
-    rows.sort(function (a, b) {
-        var va = a.querySelector('.date-input').value || '';
-        var vb = b.querySelector('.date-input').value || '';
-        if (!va && !vb) return 0;
-        if (!va) return 1;
-        if (!vb) return -1;
-        return va < vb ? -1 : va > vb ? 1 : 0;
-    });
-    rows.forEach(function (row) { container.appendChild(row); });
-}
 
 function updateDeleteButtons() {
     var container = document.getElementById('dates-container');

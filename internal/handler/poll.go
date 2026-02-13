@@ -5,7 +5,9 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
+	"time"
 
 	"meetkat/internal/poll"
 
@@ -39,8 +41,11 @@ func (h *PollHandler) renderHTML(c *gin.Context, code int, name string, data gin
 
 func (h *PollHandler) ShowNew(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
+	today := time.Now().Format("2006-01-02")
+	tomorrow := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
 	h.renderHTML(c, http.StatusOK, "new.html", gin.H{
-		"title": loc.T("new.page_title"),
+		"title":     loc.T("new.page_title"),
+		"formDates": []string{today, tomorrow},
 	})
 }
 
@@ -76,6 +81,8 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 		})
 		return
 	}
+
+	sort.Strings(options)
 
 	p, err := h.svc.Create(title, description, options)
 	if err != nil {
