@@ -129,17 +129,7 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 
 	name := strings.TrimSpace(c.PostForm("name"))
 	if name == "" {
-		totals := poll.Totals(p)
-		renderHTML(h.tmpls, c, http.StatusUnprocessableEntity, "poll.html", gin.H{
-			"title":        fmt.Sprintf(loc.T("poll.page_title"), p.Title),
-			"poll":         p,
-			"totals":       totals,
-			"winners":      view.WinningOptions(totals),
-			"url":          fmt.Sprintf("%s/poll/%s", c.Request.Host, p.ID),
-			"voteError":    loc.T("poll.error_no_name"),
-			"isAdmin":      false,
-			"headerGroups": view.BuildDateHeaders(p.Options, loc.T),
-		})
+		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", id))
 		return
 	}
 
@@ -208,24 +198,7 @@ func (h *PollHandler) SubmitAdminVote(c *gin.Context) {
 
 	name := strings.TrimSpace(c.PostForm("name"))
 	if name == "" {
-		scheme := "http"
-		if c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https" {
-			scheme = "https"
-		}
-		baseURL := fmt.Sprintf("%s://%s", scheme, c.Request.Host)
-
-		totals := poll.Totals(p)
-		renderHTML(h.tmpls, c, http.StatusUnprocessableEntity, "admin.html", gin.H{
-			"title":        fmt.Sprintf(loc.T("admin.page_title"), p.Title),
-			"poll":         p,
-			"totals":       totals,
-			"winners":      view.WinningOptions(totals),
-			"pollURL":      fmt.Sprintf("%s/poll/%s", baseURL, p.ID),
-			"adminURL":     fmt.Sprintf("%s/poll/%s/admin", baseURL, p.AdminID),
-			"isAdmin":      true,
-			"voteError":    loc.T("poll.error_no_name"),
-			"headerGroups": view.BuildDateHeaders(p.Options, loc.T),
-		})
+		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 		return
 	}
 

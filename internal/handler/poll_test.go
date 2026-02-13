@@ -116,11 +116,8 @@ func TestVoteEmptyName(t *testing.T) {
 	}
 	w := postForm(router, "/poll/"+p.ID+"/vote", form)
 
-	if w.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("expected 422, got %d", w.Code)
-	}
-	if body := w.Body.String(); !strings.Contains(body, "Please enter your name.") {
-		t.Error("expected validation error in response body")
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
 	}
 
 	got, _ := svc.Get(p.ID)
@@ -138,8 +135,8 @@ func TestVoteWhitespaceOnlyName(t *testing.T) {
 	}
 	w := postForm(router, "/poll/"+p.ID+"/vote", form)
 
-	if w.Code != http.StatusUnprocessableEntity {
-		t.Fatalf("expected 422, got %d", w.Code)
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
 	}
 
 	got, _ := svc.Get(p.ID)
