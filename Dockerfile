@@ -27,6 +27,8 @@ COPY --from=build /app/meetkat .
 COPY --from=build /app/web/templates/ ./web/templates/
 COPY --from=css /app/web/static/css/style.css ./web/static/css/
 COPY --from=build /app/web/static/js/ ./web/static/js/
+COPY --from=build /app/web/static/icons/ ./web/static/icons/
+COPY --from=build /app/web/static/manifest.json ./web/static/
 
 RUN mkdir -p /app/data
 
