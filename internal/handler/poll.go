@@ -24,6 +24,18 @@ func NewPollHandler(svc *poll.Service, tmpls map[string]*template.Template) *Pol
 	return &PollHandler{svc: svc, tmpls: tmpls}
 }
 
+// renderVoteTable renders only the vote_table fragment for AJAX responses.
+func (h *PollHandler) renderVoteTable(c *gin.Context, p *poll.Poll, isAdmin bool, pageName string) {
+	totals := poll.Totals(p)
+	renderFragment(h.tmpls, c, pageName, "vote_table", gin.H{
+		"poll":         p,
+		"totals":       totals,
+		"winners":      view.WinningOptions(totals),
+		"isAdmin":      isAdmin,
+		"headerGroups": view.BuildDateHeaders(p.Options, LocalizerFromCtx(c).T),
+	})
+}
+
 func (h *PollHandler) ShowNew(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
 	today := time.Now().Format("2006-01-02")
@@ -129,6 +141,10 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 
 	name := strings.TrimSpace(c.PostForm("name"))
 	if name == "" {
+		if isAJAX(c) {
+			c.String(http.StatusBadRequest, "name required")
+			return
+		}
 		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", id))
 		return
 	}
@@ -144,6 +160,11 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 		return
 	}
 
+	if isAJAX(c) {
+		p, _ = h.svc.Get(id)
+		h.renderVoteTable(c, p, false, "poll.html")
+		return
+	}
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", id))
 }
 
@@ -198,6 +219,10 @@ func (h *PollHandler) SubmitAdminVote(c *gin.Context) {
 
 	name := strings.TrimSpace(c.PostForm("name"))
 	if name == "" {
+		if isAJAX(c) {
+			c.String(http.StatusBadRequest, "name required")
+			return
+		}
 		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 		return
 	}
@@ -213,6 +238,11 @@ func (h *PollHandler) SubmitAdminVote(c *gin.Context) {
 		return
 	}
 
+	if isAJAX(c) {
+		p, _ = h.svc.GetByAdminID(adminID)
+		h.renderVoteTable(c, p, true, "admin.html")
+		return
+	}
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 }
 
@@ -233,6 +263,10 @@ func (h *PollHandler) RemoveVote(c *gin.Context) {
 
 	voterName := strings.TrimSpace(c.PostForm("voter_name"))
 	if voterName == "" {
+		if isAJAX(c) {
+			c.String(http.StatusBadRequest, "voter_name required")
+			return
+		}
 		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 		return
 	}
@@ -241,6 +275,11 @@ func (h *PollHandler) RemoveVote(c *gin.Context) {
 		log.Printf("remove vote error: %v", err)
 	}
 
+	if isAJAX(c) {
+		p, _ = h.svc.GetByAdminID(adminID)
+		h.renderVoteTable(c, p, true, "admin.html")
+		return
+	}
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 }
 
@@ -287,6 +326,10 @@ func (h *PollHandler) UpdateVote(c *gin.Context) {
 	newName := strings.TrimSpace(c.PostForm("name"))
 
 	if newName == "" {
+		if isAJAX(c) {
+			c.String(http.StatusBadRequest, "name required")
+			return
+		}
 		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 		return
 	}
@@ -300,5 +343,10 @@ func (h *PollHandler) UpdateVote(c *gin.Context) {
 		log.Printf("update vote error: %v", err)
 	}
 
+	if isAJAX(c) {
+		p, _ = h.svc.GetByAdminID(adminID)
+		h.renderVoteTable(c, p, true, "admin.html")
+		return
+	}
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
 }

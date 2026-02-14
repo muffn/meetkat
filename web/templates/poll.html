@@ -26,7 +26,7 @@
             <!-- Voting table with inline form -->
             <form method="POST" action="/poll/{{ .poll.ID }}/vote" class="mb-8"
                   data-confirm-incomplete="{{ call .t "poll.confirm_incomplete" }}">
-                <div data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
+                <div id="vote-table-wrapper" data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
                     {{template "vote_table" .}}
                 </div>
                 <button type="submit" id="vote-submit" disabled

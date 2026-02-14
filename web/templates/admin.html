@@ -25,8 +25,10 @@
 
             <!-- Voting table with inline vote form -->
             <form method="POST" action="/poll/{{ .poll.AdminID }}/admin/vote" class="mb-8"
-                  data-confirm-incomplete="{{ call .t "poll.confirm_incomplete" }}">
-                <div data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
+                  data-confirm-incomplete="{{ call .t "poll.confirm_incomplete" }}"
+                  data-remove-url="/poll/{{ .poll.AdminID }}/admin/remove"
+                  data-edit-url="/poll/{{ .poll.AdminID }}/admin/edit">
+                <div id="vote-table-wrapper" data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
                     {{template "vote_table" .}}
                 </div>
                 <button type="submit" id="vote-submit" disabled
@@ -35,11 +37,13 @@
                 </button>
             </form>
 
-            <!-- External form targets for remove/edit (cannot be nested inside the vote form) -->
+            <!-- External form targets for remove/edit (no-JS fallback) -->
+            <noscript>
             {{range $idx, $vote := .poll.Votes}}
             <form id="remove-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove"></form>
             <form id="edit-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/edit"></form>
             {{end}}
+            </noscript>
 
             <!-- Share section -->
             <div class="space-y-4">

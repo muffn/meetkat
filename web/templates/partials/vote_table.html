@@ -60,8 +60,7 @@
                             title="{{ call $.t "admin.edit_title" $vote.Name }}">
                         <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/pencil.svg);mask-image:url(/static/icons/pencil.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
-                    <input type="hidden" name="voter_name" value="{{ $vote.Name }}" form="remove-form-{{$idx}}">
-                    <button type="submit" form="remove-form-{{$idx}}"
+                    <button type="button" data-action="remove" data-voter="{{ $vote.Name }}"
                             class="flex items-center justify-center rounded-lg border border-background-300 p-1.5 text-text-400 transition hover:border-accent-300 hover:text-accent-500"
                             title="{{ call $.t "admin.remove_title" $vote.Name }}">
                         <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/x-mark.svg);mask-image:url(/static/icons/x-mark.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
@@ -74,14 +73,14 @@
         <!-- Edit row (hidden by default) -->
         <tr id="edit-{{$idx}}" class="hidden border-b border-background-100 bg-primary-50/50 dark:bg-primary-950/20">
             <td class="px-4 py-3">
-                <input type="text" name="name" value="{{ $vote.Name }}" form="edit-form-{{$idx}}"
+                <input type="text" name="name" value="{{ $vote.Name }}"
                        autocomplete="off" data-1p-ignore data-lpignore="true" data-form-type="other"
                        class="w-full min-w-32 rounded-md border border-background-300 bg-white px-2.5 py-1.5 text-sm text-text-800 placeholder-text-400 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:bg-background-100">
-                <input type="hidden" name="old_name" value="{{ $vote.Name }}" form="edit-form-{{$idx}}">
+                <input type="hidden" name="old_name" value="{{ $vote.Name }}">
             </td>
             {{range $.poll.Options}}
             <td class="px-4 py-3 text-center">
-                <input type="hidden" name="vote-{{ . }}" value="{{if index $responses .}}yes{{else}}no{{end}}" form="edit-form-{{$idx}}">
+                <input type="hidden" name="vote-{{ . }}" value="{{if index $responses .}}yes{{else}}no{{end}}">
                 <div class="inline-flex flex-col overflow-hidden rounded-full border border-background-300">
                     <!-- Yes -->
                     <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 transition hover:bg-green-50 hover:text-green-400 {{if index $responses .}}bg-green-100 text-green-600{{else}}bg-background-50 text-background-300{{end}}"
@@ -102,7 +101,7 @@
             {{end}}
             <td class="px-4 py-3 text-center">
                 <div class="inline-flex gap-1">
-                    <button type="submit" form="edit-form-{{$idx}}"
+                    <button type="button" data-action="edit-save" data-idx="{{$idx}}"
                             class="flex items-center justify-center rounded-lg border border-background-300 p-1.5 text-text-400 transition hover:border-green-400 hover:text-green-500"
                             title="{{ call $.t "admin.save" }}">
                         <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/check.svg);mask-image:url(/static/icons/check.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>

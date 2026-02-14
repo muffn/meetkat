@@ -256,6 +256,16 @@ If you’re unsure about a design choice or there are multiple good options, pau
 
 ---
 
+## Behaviour
+
+Expected runtime behaviours to preserve. Reference this section when modifying related code.
+
+- **AJAX partial updates**: Vote operations (submit, edit, remove) use `fetch()` with `X-Requested-With: fetch` to POST, and the server returns only the `vote_table` HTML fragment. JS swaps `#vote-table-wrapper.innerHTML` and re-initializes event listeners via `initTable()`. Full-page redirects remain as the no-JS fallback.
+- **Confirm-incomplete vote (two-click pattern)**: When a user submits a vote with unanswered options (hidden inputs still `""`), the submit button changes to an amber "are you sure?" state and the submission is **blocked**. Only on the **second** click does the vote actually send. Clicking any vote button while armed resets the button to its original state. This logic lives in the AJAX submit handler — not in a separate submit listener — to guarantee execution order.
+- **Scroll position preservation**: After an AJAX table swap, `wrapper.scrollLeft` is saved before and restored after the innerHTML replacement so horizontal scroll position is not lost.
+
+---
+
 ## Open questions / TODOs for Claude
 
 (Use this as a living list you edit over time.)
