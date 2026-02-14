@@ -242,6 +242,73 @@ func TestMultipleVotes(t *testing.T) {
 	}
 }
 
+func TestUpdateVotePreservesPosition(t *testing.T) {
+	repo := openTestDB(t)
+
+	p := &poll.Poll{
+		ID:      "upd12345",
+		AdminID: "adm_upd1",
+		Title:   "Update test",
+		Options: []string{"Mon", "Tue"},
+	}
+	if err := repo.Create(p); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	_ = repo.AddVote("upd12345", poll.Vote{Name: "Alice", Responses: map[string]bool{"Mon": true, "Tue": false}})
+	_ = repo.AddVote("upd12345", poll.Vote{Name: "Bob", Responses: map[string]bool{"Mon": false, "Tue": true}})
+	_ = repo.AddVote("upd12345", poll.Vote{Name: "Carol", Responses: map[string]bool{"Mon": true, "Tue": true}})
+
+	// Update Bob's name and responses.
+	err := repo.UpdateVote("upd12345", "Bob", poll.Vote{
+		Name:      "Bobby",
+		Responses: map[string]bool{"Mon": true, "Tue": true},
+	})
+	if err != nil {
+		t.Fatalf("update vote: %v", err)
+	}
+
+	got, _ := repo.GetByPublicID("upd12345")
+	if len(got.Votes) != 3 {
+		t.Fatalf("votes: got %d, want 3", len(got.Votes))
+	}
+
+	// Order must be preserved: Alice, Bobby (was Bob), Carol.
+	wantNames := []string{"Alice", "Bobby", "Carol"}
+	for i, want := range wantNames {
+		if got.Votes[i].Name != want {
+			t.Errorf("vote[%d]: got %q, want %q", i, got.Votes[i].Name, want)
+		}
+	}
+
+	// Bobby's responses should be updated.
+	if !got.Votes[1].Responses["Mon"] {
+		t.Error("expected Bobby's Mon to be true")
+	}
+	if !got.Votes[1].Responses["Tue"] {
+		t.Error("expected Bobby's Tue to be true")
+	}
+}
+
+func TestUpdateVoteNotFound(t *testing.T) {
+	repo := openTestDB(t)
+
+	p := &poll.Poll{
+		ID:      "updnf123",
+		AdminID: "adm_unf1",
+		Title:   "Update NF",
+		Options: []string{"A"},
+	}
+	if err := repo.Create(p); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	err := repo.UpdateVote("updnf123", "Nobody", poll.Vote{Name: "X", Responses: map[string]bool{"A": true}})
+	if err == nil {
+		t.Fatal("expected error for nonexistent voter")
+	}
+}
+
 func TestServiceWithSQLiteRepository(t *testing.T) {
 	db, err := Open(":memory:")
 	if err != nil {
