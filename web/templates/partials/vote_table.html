@@ -56,16 +56,16 @@
             <td class="px-4 py-3 text-center">
                 <div class="inline-flex gap-1">
                     <button type="button" onclick="startEdit({{$idx}})"
-                            class="rounded-md px-2 py-1 text-xs font-medium text-primary-600 transition hover:bg-primary-50 hover:text-primary-700"
+                            class="flex items-center justify-center rounded-lg border border-background-300 p-1.5 text-text-400 transition hover:border-primary-300 hover:text-primary-500"
                             title="{{ call $.t "admin.edit_title" $vote.Name }}">
-                        {{ call $.t "admin.edit" }}
+                        <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/pencil.svg);mask-image:url(/static/icons/pencil.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
                     <input type="hidden" name="voter_name" value="{{ $vote.Name }}" form="remove-form-{{$idx}}">
-                        <button type="submit" form="remove-form-{{$idx}}"
-                                class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
-                                title="{{ call $.t "admin.remove_title" $vote.Name }}">
-                            {{ call $.t "admin.remove" }}
-                        </button>
+                    <button type="submit" form="remove-form-{{$idx}}"
+                            class="flex items-center justify-center rounded-lg border border-background-300 p-1.5 text-text-400 transition hover:border-accent-300 hover:text-accent-500"
+                            title="{{ call $.t "admin.remove_title" $vote.Name }}">
+                        <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/x-mark.svg);mask-image:url(/static/icons/x-mark.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
+                    </button>
                 </div>
             </td>
             {{end}}
