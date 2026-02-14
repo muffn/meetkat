@@ -15,7 +15,7 @@ Your job is to:
 
 - Language: Go
 - Backend framework: Gin
-- Frontend: Server‑rendered HTML templates + Tailwind CSS
+- Frontend: Server‑rendered HTML templates + Tailwind CSS + PWA (installable)
 - Database: SQLite (file-based, embedded) — **not yet implemented**
 - Purpose: Create polls for scheduling group events/meetups; share links for participants to vote.
 
@@ -58,11 +58,13 @@ meetkat/
 │       ├── css/
 │       │   ├── input.css    # Tailwind source (theme, variables, dark mode)
 │       │   └── style.css    # Compiled output (gitignored)
-│       └── js/
-│           └── app.js
+│       ├── js/
+│       │   ├── app.js
+│       │   └── sw.js        # Service worker (network-first caching)
+│       └── manifest.json    # PWA web app manifest
 ├── data/                    # meetkat.db (runtime, gitignored)
 ├── .air.toml                # Air live-reload config
-├── Dockerfile               # Multi-stage build (CSS → Go → Alpine)
+├── Dockerfile               # Multi-stage build (CSS → Go → Alpine); copies icons + manifest
 └── docker-compose.yml       # Docker Compose for deployment
 ```
 
@@ -120,6 +122,12 @@ Follow idiomatic Go and common Gin practices:
 - Prefer returning `(T, error)` rather than panicking; keep panics for truly exceptional situations.
 - Add tests for new public functions and for bug fixes.
 
+PWA / Service worker:
+- The service worker (`web/static/js/sw.js`) is served at `/sw.js` (root scope) via a dedicated Gin route in `main.go`.
+- The manifest (`web/static/manifest.json`) and theme-color meta tag are linked in `base.html`.
+- The SW uses a network-first strategy: tries the network, caches successful responses, falls back to cache when offline.
+- When updating cached assets, bump the `CACHE_NAME` version string in `sw.js`.
+
 Routing:
 - Use URL-based access only:
     - `/polls` or `/new` – create new poll (admin).
@@ -145,6 +153,7 @@ Error handling & responses:
     - Reusable partials for poll rows, inputs, etc.
 - Distinguish admin vs. participant views clearly via URL paths.
 - When generating HTML, do **not** mix heavy business logic into templates. Keep logic in Go and pass prepared data.
+- The base layout includes PWA meta tags (`manifest`, `theme-color`) and registers the service worker. New pages inheriting from `base.html` get PWA support automatically.
 
 ---
 

@@ -31,6 +31,7 @@ This project uses **Tailwind CSS v4** with a build step via `@tailwindcss/cli`. 
 - **Templating**: Go `html/template` with `{{define}}`, `{{template}}`, `{{block}}` directives
 - **Templates**: `web/templates/layouts/base.html` (base layout), `web/templates/*.html` (pages)
 - **Static serving**: Gin serves `/static` from `./static` directory
+- **PWA**: `web/static/manifest.json` (app manifest) and `web/static/js/sw.js` (service worker) are linked from `base.html`. Theme color in the manifest (`#b8922f`) should stay in sync with `primary-500`.
 
 ## Basic Usage
 
