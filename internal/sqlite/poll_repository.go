@@ -290,27 +290,20 @@ func (r *PollRepository) UpdateVote(pollID string, oldName string, vote poll.Vot
 		return fmt.Errorf("query poll id: %w", err)
 	}
 
-	// Delete the old vote (CASCADE removes responses).
-	delRes, err := tx.Exec("DELETE FROM votes WHERE poll_id = ? AND name = ?", rowID, oldName)
-	if err != nil {
-		return fmt.Errorf("delete old vote: %w", err)
-	}
-	n, err := delRes.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("rows affected: %w", err)
-	}
-	if n == 0 {
+	// Find the existing vote row ID (preserves id and voted_at).
+	var voteID int64
+	err = tx.QueryRow("SELECT id FROM votes WHERE poll_id = ? AND name = ?", rowID, oldName).Scan(&voteID)
+	if err == sql.ErrNoRows {
 		return fmt.Errorf("vote not found")
 	}
-
-	// Insert the new vote.
-	voteRes, err := tx.Exec("INSERT INTO votes (poll_id, name) VALUES (?, ?)", rowID, vote.Name)
 	if err != nil {
-		return fmt.Errorf("insert vote: %w", err)
+		return fmt.Errorf("query vote id: %w", err)
 	}
-	voteID, err := voteRes.LastInsertId()
+
+	// Update the voter name and mark as edited, preserving id and voted_at.
+	_, err = tx.Exec("UPDATE votes SET name = ?, edited_at = datetime('now') WHERE id = ?", vote.Name, voteID)
 	if err != nil {
-		return fmt.Errorf("last insert id: %w", err)
+		return fmt.Errorf("update vote: %w", err)
 	}
 
 	// Load option IDs for this poll, keyed by label.
@@ -333,7 +326,7 @@ func (r *PollRepository) UpdateVote(pollID string, oldName string, vote poll.Vot
 		return fmt.Errorf("iterate options: %w", err)
 	}
 
-	// Insert vote responses.
+	// Upsert vote responses.
 	for label, available := range vote.Responses {
 		optID, ok := optionIDByLabel[label]
 		if !ok {
@@ -344,11 +337,11 @@ func (r *PollRepository) UpdateVote(pollID string, oldName string, vote poll.Vot
 			avail = 1
 		}
 		_, err := tx.Exec(
-			"INSERT INTO vote_responses (vote_id, option_id, available) VALUES (?, ?, ?)",
+			"INSERT INTO vote_responses (vote_id, option_id, available) VALUES (?, ?, ?) ON CONFLICT(vote_id, option_id) DO UPDATE SET available = excluded.available",
 			voteID, optID, avail,
 		)
 		if err != nil {
-			return fmt.Errorf("insert response for %q: %w", label, err)
+			return fmt.Errorf("upsert response for %q: %w", label, err)
 		}
 	}
 
