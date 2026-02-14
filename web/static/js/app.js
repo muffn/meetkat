@@ -169,52 +169,31 @@ function initSubmitButton(form) {
     update();
 }
 
-// Confirm incomplete vote submission (two-click pattern)
-function initConfirmIncomplete(form) {
-    var btn = form.querySelector('#vote-submit');
-    if (!btn) return;
-    var originalText = btn.textContent.trim();
-    var confirmText = form.dataset.confirmIncomplete;
-    var armed = false;
-
-    function hasEmpty() {
-        // Only check hidden vote inputs in the inline vote row, not edit rows.
-        var nameInput = form.querySelector('#vote-name');
-        var lastRow = nameInput ? nameInput.closest('tr') : null;
-        if (!lastRow) return false;
-        var inputs = lastRow.querySelectorAll('input[type="hidden"][name^="vote-"]');
-        var empty = false;
-        inputs.forEach(function (input) {
-            if (input.value === '') empty = true;
-        });
-        return empty;
-    }
-
-    function reset() {
-        if (!armed) return;
-        armed = false;
-        btn.textContent = originalText;
-        btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-        btn.classList.add('bg-primary-500', 'hover:bg-primary-600');
-    }
-
-    form.addEventListener('submit', function (e) {
-        if (!hasEmpty()) return;
-        if (armed) { armed = false; return; }
-        e.preventDefault();
-        armed = true;
-        btn.textContent = confirmText;
-        btn.classList.remove('bg-primary-500', 'hover:bg-primary-600');
-        btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+// Check whether the inline vote row has any unanswered options.
+function voteRowHasEmpty(form) {
+    var nameInput = form.querySelector('#vote-name');
+    var row = nameInput ? nameInput.closest('tr') : null;
+    if (!row) return false;
+    var inputs = row.querySelectorAll('input[type="hidden"][name^="vote-"]');
+    var empty = false;
+    inputs.forEach(function (input) {
+        if (input.value === '') empty = true;
     });
-
-    // Reset when the user interacts with vote buttons in the inline row
-    form.querySelectorAll('.vote-btn').forEach(function (voteBtn) {
-        voteBtn.addEventListener('click', function () { reset(); });
-    });
+    return empty;
 }
 
-// Initialize all vote-table interactions; call after table swap
+// Reset the confirm-incomplete "armed" state on a vote form.
+function resetConfirmArmed(form) {
+    if (form.dataset.confirmArmed !== 'true') return;
+    form.dataset.confirmArmed = '';
+    var btn = form.querySelector('#vote-submit');
+    if (!btn) return;
+    btn.textContent = btn.dataset.originalText || '';
+    btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+    btn.classList.add('bg-primary-500', 'hover:bg-primary-600');
+}
+
+// Initialize all vote-table interactions; call after table swap.
 function initTable() {
     var wrapper = document.getElementById('vote-table-wrapper');
     if (wrapper) {
@@ -222,7 +201,17 @@ function initTable() {
     }
     document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
         initSubmitButton(form);
-        initConfirmIncomplete(form);
+        // Store original button text for confirm-incomplete reset
+        var btn = form.querySelector('#vote-submit');
+        if (btn && !btn.dataset.originalText) {
+            btn.dataset.originalText = btn.textContent.trim();
+        }
+        // Reset confirm-armed when vote buttons are clicked (new elements after swap)
+        if (wrapper) {
+            wrapper.querySelectorAll('.vote-btn').forEach(function (voteBtn) {
+                voteBtn.addEventListener('click', function () { resetConfirmArmed(form); });
+            });
+        }
     });
 }
 
@@ -257,12 +246,28 @@ function initTable() {
     }
 
     // Intercept vote form submit (poll + admin pages)
-    // Runs after initConfirmIncomplete, so if confirm-incomplete called
-    // preventDefault (first click on incomplete vote), we skip the fetch.
     document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
         form.addEventListener('submit', function (e) {
-            if (e.defaultPrevented) return; // two-click pattern blocked it
             e.preventDefault();
+
+            // Two-click confirm pattern for incomplete votes
+            if (voteRowHasEmpty(form)) {
+                if (form.dataset.confirmArmed !== 'true') {
+                    // First click: arm and show warning, do NOT send
+                    form.dataset.confirmArmed = 'true';
+                    var btn = form.querySelector('#vote-submit');
+                    if (btn) {
+                        if (!btn.dataset.originalText) btn.dataset.originalText = btn.textContent.trim();
+                        btn.textContent = form.dataset.confirmIncomplete;
+                        btn.classList.remove('bg-primary-500', 'hover:bg-primary-600');
+                        btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+                    }
+                    return;
+                }
+                // Second click: user confirmed, reset and proceed
+                resetConfirmArmed(form);
+            }
+
             // Build FormData from only the inline vote row, not edit rows
             var formData = new FormData();
             var nameInput = form.querySelector('#vote-name');
@@ -276,8 +281,8 @@ function initTable() {
             fetchAndSwap(form.action, formData);
             // Clear the name input and reset submit button after successful vote
             if (nameInput) nameInput.value = '';
-            var btn = form.querySelector('#vote-submit');
-            if (btn) btn.disabled = true;
+            var submitBtn = form.querySelector('#vote-submit');
+            if (submitBtn) submitBtn.disabled = true;
         });
     });
 
