@@ -60,14 +60,12 @@
                             title="{{ call $.t "admin.edit_title" $vote.Name }}">
                         {{ call $.t "admin.edit" }}
                     </button>
-                    <form method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove" class="inline">
-                        <input type="hidden" name="voter_name" value="{{ $vote.Name }}">
-                        <button type="submit"
+                    <input type="hidden" name="voter_name" value="{{ $vote.Name }}" form="remove-form-{{$idx}}">
+                        <button type="submit" form="remove-form-{{$idx}}"
                                 class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
                                 title="{{ call $.t "admin.remove_title" $vote.Name }}">
                             {{ call $.t "admin.remove" }}
                         </button>
-                    </form>
                 </div>
             </td>
             {{end}}
@@ -104,12 +102,10 @@
             {{end}}
             <td class="px-4 py-3 text-center">
                 <div class="inline-flex gap-1">
-                    <form id="edit-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/edit">
-                        <button type="submit"
+                    <button type="submit" form="edit-form-{{$idx}}"
                                 class="rounded-md bg-primary-500 px-2 py-1 text-xs font-medium text-white transition hover:bg-primary-600">
                             {{ call $.t "admin.save" }}
                         </button>
-                    </form>
                     <button type="button" onclick="cancelEdit({{$idx}})"
                             class="rounded-md px-2 py-1 text-xs font-medium text-text-500 transition hover:bg-background-100 hover:text-text-700">
                         {{ call $.t "admin.cancel" }}

@@ -118,7 +118,7 @@
 // Enable/disable submit button based on name input + red outline hint
 (function () {
     document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
-        var nameInput = form.querySelector('input[name="name"]');
+        var nameInput = form.querySelector('#vote-name');
         var btn = form.querySelector('button[type="submit"]');
         if (!nameInput || !btn) return;
 

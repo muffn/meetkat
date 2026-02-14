@@ -37,6 +37,12 @@
                 </button>
             </form>
 
+            <!-- External form targets for remove/edit (cannot be nested inside the vote form) -->
+            {{range $idx, $vote := .poll.Votes}}
+            <form id="remove-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove"></form>
+            <form id="edit-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/edit"></form>
+            {{end}}
+
             <!-- Share section -->
             <div class="space-y-4">
                 <div class="rounded-lg border border-background-200 bg-background-50 p-4">
