@@ -75,8 +75,10 @@ meetkat/
 │       ├── css/
 │       │   ├── input.css
 │       │   └── style.css         # Compiled (gitignored)
-│       └── js/
-│           └── app.js
+│       ├── js/
+│       │   ├── app.js
+│       │   └── sw.js             # Service worker (network-first PWA)
+│       └── manifest.json         # PWA web app manifest
 ├── data/                         # meetkat.db (runtime, gitignored)
 ├── .air.toml
 ├── Dockerfile

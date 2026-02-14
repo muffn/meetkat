@@ -43,6 +43,9 @@ func main() {
 
 	r := gin.Default()
 	r.Static("/static", "./web/static")
+	r.GET("/sw.js", func(c *gin.Context) {
+		c.File("./web/static/js/sw.js")
+	})
 	r.Use(middleware.LangCookie(translator))
 
 	r.GET("/", hh.ShowHome)

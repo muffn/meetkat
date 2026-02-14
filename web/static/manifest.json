@@ -1,0 +1,17 @@
+{
+  "name": "meetkat",
+  "short_name": "meetkat",
+  "description": "Group scheduling made simple",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f0e3",
+  "theme_color": "#b8922f",
+  "icons": [
+    {
+      "src": "/static/icons/meetkot-head.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
