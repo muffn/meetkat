@@ -118,8 +118,8 @@
 // Enable/disable submit button based on name input + red outline hint
 (function () {
     document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
-        var nameInput = form.querySelector('input[name="name"]');
-        var btn = form.querySelector('button[type="submit"]');
+        var nameInput = form.querySelector('#vote-name');
+        var btn = form.querySelector('#vote-submit');
         if (!nameInput || !btn) return;
 
         function update() {
@@ -147,7 +147,7 @@
 // Confirm incomplete vote submission (two-click pattern)
 (function () {
     document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
-        var btn = form.querySelector('button[type="submit"]');
+        var btn = form.querySelector('#vote-submit');
         if (!btn) return;
         var originalText = btn.textContent.trim();
         var confirmText = form.dataset.confirmIncomplete;

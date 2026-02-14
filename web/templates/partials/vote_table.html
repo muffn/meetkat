@@ -56,18 +56,16 @@
             <td class="px-4 py-3 text-center">
                 <div class="inline-flex gap-1">
                     <button type="button" onclick="startEdit({{$idx}})"
-                            class="rounded-md px-2 py-1 text-xs font-medium text-primary-600 transition hover:bg-primary-50 hover:text-primary-700"
+                            class="flex items-center justify-center rounded-lg border border-background-300 p-1.5 text-text-400 transition hover:border-primary-300 hover:text-primary-500"
                             title="{{ call $.t "admin.edit_title" $vote.Name }}">
-                        {{ call $.t "admin.edit" }}
+                        <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/pencil.svg);mask-image:url(/static/icons/pencil.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
-                    <form method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove" class="inline">
-                        <input type="hidden" name="voter_name" value="{{ $vote.Name }}">
-                        <button type="submit"
-                                class="rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 hover:text-red-700"
-                                title="{{ call $.t "admin.remove_title" $vote.Name }}">
-                            {{ call $.t "admin.remove" }}
-                        </button>
-                    </form>
+                    <input type="hidden" name="voter_name" value="{{ $vote.Name }}" form="remove-form-{{$idx}}">
+                    <button type="submit" form="remove-form-{{$idx}}"
+                            class="flex items-center justify-center rounded-lg border border-background-300 p-1.5 text-text-400 transition hover:border-accent-300 hover:text-accent-500"
+                            title="{{ call $.t "admin.remove_title" $vote.Name }}">
+                        <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/x-mark.svg);mask-image:url(/static/icons/x-mark.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
+                    </button>
                 </div>
             </td>
             {{end}}
@@ -104,15 +102,15 @@
             {{end}}
             <td class="px-4 py-3 text-center">
                 <div class="inline-flex gap-1">
-                    <form id="edit-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/edit">
-                        <button type="submit"
-                                class="rounded-md bg-primary-500 px-2 py-1 text-xs font-medium text-white transition hover:bg-primary-600">
-                            {{ call $.t "admin.save" }}
-                        </button>
-                    </form>
+                    <button type="submit" form="edit-form-{{$idx}}"
+                            class="flex items-center justify-center rounded-lg border border-background-300 p-1.5 text-text-400 transition hover:border-green-400 hover:text-green-500"
+                            title="{{ call $.t "admin.save" }}">
+                        <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/check.svg);mask-image:url(/static/icons/check.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
+                    </button>
                     <button type="button" onclick="cancelEdit({{$idx}})"
-                            class="rounded-md px-2 py-1 text-xs font-medium text-text-500 transition hover:bg-background-100 hover:text-text-700">
-                        {{ call $.t "admin.cancel" }}
+                            class="flex items-center justify-center rounded-lg border border-background-300 p-1.5 text-text-400 transition hover:border-accent-300 hover:text-accent-500"
+                            title="{{ call $.t "admin.cancel" }}">
+                        <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/x-mark.svg);mask-image:url(/static/icons/x-mark.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
                 </div>
             </td>
@@ -170,7 +168,7 @@
             <td class="px-4 py-3 text-center text-sm font-semibold {{if and $.winners (index $.winners .)}}text-amber-600{{else}}text-primary-600{{end}}">
                 <span class="relative inline-block">
                     {{if and $.winners (index $.winners .)}}
-                    <span class="absolute -left-4 top-1/2 size-3 -translate-y-1/2 bg-amber-400" style="-webkit-mask-image:url(../../static/icons/star.svg);mask-image:url(../../static/icons/star.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
+                    <span class="absolute -left-4 top-1/2 size-3 -translate-y-1/2 bg-amber-400" style="-webkit-mask-image:url(/static/icons/star.svg);mask-image:url(/static/icons/star.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     {{end}}
                     {{index $.totals .}}
                 </span>

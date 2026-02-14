@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" type="image/svg+xml" href="../../static/icons/meetkot-head.svg">
-    <link rel="manifest" href="../../static/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/static/icons/meetkot-head.svg">
+    <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#b8922f">
     <title>{{block "title" .}}meetkat{{end}}</title>
-    <link rel="stylesheet" href="../../static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
     <script>
         (function() {
             var theme = localStorage.theme;
@@ -103,7 +103,7 @@
     </div>
 </div>
 {{block "content" .}}{{end}}
-<script src="../../static/js/app.js"></script>
+<script src="/static/js/app.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');

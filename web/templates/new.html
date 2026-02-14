@@ -6,9 +6,7 @@
 <section class="min-h-dvh bg-background-50 px-4 py-12 sm:px-6">
     <div class="mx-auto max-w-xl">
         <a href="/" class="inline-flex items-center gap-1 text-sm font-medium text-text-500 transition hover:text-primary-500">
-            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd"/>
-            </svg>
+            <span class="inline-block size-4 bg-current" style="-webkit-mask-image:url(/static/icons/arrow-left.svg);mask-image:url(/static/icons/arrow-left.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
             {{ call .t "nav.back" }}
         </a>
 
@@ -61,16 +59,12 @@
                                     <button type="button"
                                             class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex"
                                             tabindex="-1" aria-label="{{ call $.t "new.aria_open_calendar" }}">
-                                        <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>
-                                        </svg>
+                                        <span class="size-5 bg-current" style="-webkit-mask-image:url(/static/icons/calendar.svg);mask-image:url(/static/icons/calendar.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                                     </button>
                                 </label>
                                 <button type="button" onclick="removeDate(this)"
                                         class="date-delete flex items-center justify-center self-stretch rounded-lg border border-background-300 px-2 text-text-400 transition hover:border-accent-300 hover:text-accent-500">
-                                    <svg class="size-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                    </svg>
+                                    <span class="size-5 bg-current" style="-webkit-mask-image:url(/static/icons/x-mark.svg);mask-image:url(/static/icons/x-mark.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                                 </button>
                             </div>
                             {{end}}
@@ -80,9 +74,7 @@
                     <div class="mt-3 flex flex-wrap gap-2">
                         <button type="button" onclick="addDate()"
                                 class="inline-flex items-center gap-1 rounded-lg border border-dashed border-background-300 px-3 py-1.5 text-sm font-medium text-text-500 transition hover:border-primary-400 hover:text-primary-600">
-                            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"/>
-                            </svg>
+                            <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/plus.svg);mask-image:url(/static/icons/plus.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                             {{ call $.t "new.add_date" }}
                         </button>
                         <button type="button" onclick="addDateOffset(1)"
@@ -161,14 +153,10 @@ function createRow(dateValue) {
         '<label class="relative block"><span class="sr-only">' + srText + '</span>' +
         '<input type="date" name="dates[]"' + (dateValue ? ' value="' + dateValue + '"' : '') + ' class="date-input block w-full appearance-none rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-text-900 transition focus:border-primary-400 focus:ring-2 focus:ring-primary-200 focus:outline-none dark:border-background-300 dark:bg-background-50 md:pr-10">' +
         '<button type="button" class="date-toggle absolute right-2 top-1/2 hidden -translate-y-1/2 items-center text-text-400 transition hover:text-primary-500 md:flex" tabindex="-1" aria-label="' + ariaCalendar + '">' +
-            '<svg class="size-5" viewBox="0 0 20 20" fill="currentColor">' +
-                '<path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4H17a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V5a1 1 0 011-1h2V2.75A.75.75 0 015.75 2zM4 7.5v9h12v-9H4z" clip-rule="evenodd"/>' +
-            '</svg>' +
+            '<span class="size-5 bg-current" style="-webkit-mask-image:url(/static/icons/calendar.svg);mask-image:url(/static/icons/calendar.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>' +
         '</button></label>' +
         '<button type="button" onclick="removeDate(this)" class="date-delete flex items-center justify-center self-stretch rounded-lg border border-background-300 px-2 text-text-400 transition hover:border-accent-300 hover:text-accent-500">' +
-            '<svg class="size-5" viewBox="0 0 20 20" fill="currentColor">' +
-                '<path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>' +
-            '</svg>' +
+            '<span class="size-5 bg-current" style="-webkit-mask-image:url(/static/icons/x-mark.svg);mask-image:url(/static/icons/x-mark.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>' +
         '</button>';
     container.appendChild(row);
     initRow(row);

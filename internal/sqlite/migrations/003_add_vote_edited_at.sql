@@ -1,0 +1,1 @@
+ALTER TABLE votes ADD COLUMN edited_at TEXT;

@@ -6,9 +6,7 @@
 <section class="min-h-dvh bg-background-50 px-4 py-12 sm:px-6">
     <div class="mx-auto max-w-2xl">
         <a href="/" class="inline-flex items-center gap-1 text-sm font-medium text-text-500 transition hover:text-primary-500">
-            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clip-rule="evenodd"/>
-            </svg>
+            <span class="inline-block size-4 bg-current" style="-webkit-mask-image:url(/static/icons/arrow-left.svg);mask-image:url(/static/icons/arrow-left.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
             {{ call .t "nav.back" }}
         </a>
 
@@ -31,7 +29,7 @@
                 <div data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
                     {{template "vote_table" .}}
                 </div>
-                <button type="submit" disabled
+                <button type="submit" id="vote-submit" disabled
                         class="mt-4 w-full rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-600 focus:ring-2 focus:ring-primary-300 disabled:cursor-not-allowed disabled:opacity-50">
                     {{ call $.t "poll.submit_vote" }}
                 </button>

@@ -421,6 +421,37 @@ func TestUpdateVoteHandler(t *testing.T) {
 	}
 }
 
+func TestUpdateVotePreservesPosition(t *testing.T) {
+	router, svc := setupTestRouter()
+	p := seedPoll(svc, "Position test", []string{"Mon", "Tue"})
+	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
+	_ = svc.AddVote(p.ID, "Bob", map[string]bool{"Mon": false, "Tue": true})
+	_ = svc.AddVote(p.ID, "Carol", map[string]bool{"Mon": true, "Tue": true})
+
+	// Edit Bob (middle vote) — should stay in position 1.
+	form := url.Values{
+		"old_name": {"Bob"},
+		"name":     {"Bobby"},
+		"vote-Mon": {"yes"},
+		"vote-Tue": {"yes"},
+	}
+	w := postForm(router, "/poll/"+p.AdminID+"/admin/edit", form)
+	if w.Code != http.StatusSeeOther {
+		t.Fatalf("expected 303, got %d", w.Code)
+	}
+
+	got, _ := svc.Get(p.ID)
+	if len(got.Votes) != 3 {
+		t.Fatalf("expected 3 votes, got %d", len(got.Votes))
+	}
+	wantNames := []string{"Alice", "Bobby", "Carol"}
+	for i, want := range wantNames {
+		if got.Votes[i].Name != want {
+			t.Errorf("vote[%d]: got %q, want %q", i, got.Votes[i].Name, want)
+		}
+	}
+}
+
 func TestUpdateVoteEmptyName(t *testing.T) {
 	router, svc := setupTestRouter()
 	p := seedPoll(svc, "Edit empty", []string{"Mon"})
