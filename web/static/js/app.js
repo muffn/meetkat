@@ -115,83 +115,9 @@
     updateLangButtons();
 })();
 
-// Enable/disable submit button based on name input + red outline hint
-(function () {
-    document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
-        var nameInput = form.querySelector('#vote-name');
-        var btn = form.querySelector('#vote-submit');
-        if (!nameInput || !btn) return;
-
-        function update() {
-            var hasName = nameInput.value.trim() !== '';
-            btn.disabled = !hasName;
-            if (hasName) {
-                nameInput.classList.remove('border-red-400', 'ring-2', 'ring-red-100');
-            }
-        }
-
-        nameInput.addEventListener('input', update);
-        nameInput.addEventListener('blur', function () {
-            if (!nameInput.value.trim()) {
-                nameInput.classList.add('border-red-400', 'ring-2', 'ring-red-100');
-            }
-        });
-        nameInput.addEventListener('focus', function () {
-            nameInput.classList.remove('border-red-400', 'ring-2', 'ring-red-100');
-        });
-
-        update();
-    });
-})();
-
-// Confirm incomplete vote submission (two-click pattern)
-(function () {
-    document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
-        var btn = form.querySelector('#vote-submit');
-        if (!btn) return;
-        var originalText = btn.textContent.trim();
-        var confirmText = form.dataset.confirmIncomplete;
-        var armed = false;
-
-        function hasEmpty() {
-            var inputs = form.querySelectorAll('input[type="hidden"][name^="vote-"]');
-            var empty = false;
-            inputs.forEach(function (input) {
-                if (!input.getAttribute('form') && input.value === '') {
-                    empty = true;
-                }
-            });
-            return empty;
-        }
-
-        function reset() {
-            if (!armed) return;
-            armed = false;
-            btn.textContent = originalText;
-            btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
-            btn.classList.add('bg-primary-500', 'hover:bg-primary-600');
-        }
-
-        form.addEventListener('submit', function (e) {
-            if (!hasEmpty()) return;
-            if (armed) { armed = false; return; }
-            e.preventDefault();
-            armed = true;
-            btn.textContent = confirmText;
-            btn.classList.remove('bg-primary-500', 'hover:bg-primary-600');
-            btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
-        });
-
-        // Reset when the user interacts with vote buttons
-        form.querySelectorAll('.vote-btn').forEach(function (voteBtn) {
-            voteBtn.addEventListener('click', function () { reset(); });
-        });
-    });
-})();
-
-// Vote button toggles (yes/no)
-(function () {
-    document.querySelectorAll('.vote-btn').forEach(function (btn) {
+// Vote button toggles (yes/no) — scoped to a root element
+function initVoteButtons(root) {
+    root.querySelectorAll('.vote-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var td = btn.closest('td');
             var hidden = td.querySelector('input[type="hidden"]');
@@ -214,7 +140,176 @@
             btn.setAttribute('aria-pressed', 'true');
         });
     });
+}
+
+// Enable/disable submit button based on name input + red outline hint
+function initSubmitButton(form) {
+    var nameInput = form.querySelector('#vote-name');
+    var btn = form.querySelector('#vote-submit');
+    if (!nameInput || !btn) return;
+
+    function update() {
+        var hasName = nameInput.value.trim() !== '';
+        btn.disabled = !hasName;
+        if (hasName) {
+            nameInput.classList.remove('border-red-400', 'ring-2', 'ring-red-100');
+        }
+    }
+
+    nameInput.addEventListener('input', update);
+    nameInput.addEventListener('blur', function () {
+        if (!nameInput.value.trim()) {
+            nameInput.classList.add('border-red-400', 'ring-2', 'ring-red-100');
+        }
+    });
+    nameInput.addEventListener('focus', function () {
+        nameInput.classList.remove('border-red-400', 'ring-2', 'ring-red-100');
+    });
+
+    update();
+}
+
+// Confirm incomplete vote submission (two-click pattern)
+function initConfirmIncomplete(form) {
+    var btn = form.querySelector('#vote-submit');
+    if (!btn) return;
+    var originalText = btn.textContent.trim();
+    var confirmText = form.dataset.confirmIncomplete;
+    var armed = false;
+
+    function hasEmpty() {
+        // Only check hidden vote inputs in the inline vote row, not edit rows.
+        var nameInput = form.querySelector('#vote-name');
+        var lastRow = nameInput ? nameInput.closest('tr') : null;
+        if (!lastRow) return false;
+        var inputs = lastRow.querySelectorAll('input[type="hidden"][name^="vote-"]');
+        var empty = false;
+        inputs.forEach(function (input) {
+            if (input.value === '') empty = true;
+        });
+        return empty;
+    }
+
+    function reset() {
+        if (!armed) return;
+        armed = false;
+        btn.textContent = originalText;
+        btn.classList.remove('bg-amber-500', 'hover:bg-amber-600');
+        btn.classList.add('bg-primary-500', 'hover:bg-primary-600');
+    }
+
+    form.addEventListener('submit', function (e) {
+        if (!hasEmpty()) return;
+        if (armed) { armed = false; return; }
+        e.preventDefault();
+        armed = true;
+        btn.textContent = confirmText;
+        btn.classList.remove('bg-primary-500', 'hover:bg-primary-600');
+        btn.classList.add('bg-amber-500', 'hover:bg-amber-600');
+    });
+
+    // Reset when the user interacts with vote buttons in the inline row
+    form.querySelectorAll('.vote-btn').forEach(function (voteBtn) {
+        voteBtn.addEventListener('click', function () { reset(); });
+    });
+}
+
+// Initialize all vote-table interactions; call after table swap
+function initTable() {
+    var wrapper = document.getElementById('vote-table-wrapper');
+    if (wrapper) {
+        initVoteButtons(wrapper);
+    }
+    document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
+        initSubmitButton(form);
+        initConfirmIncomplete(form);
+    });
+}
+
+// AJAX fetch interceptor for vote operations
+(function () {
+    var inFlight = false;
+
+    function fetchAndSwap(url, formData) {
+        if (inFlight) return;
+        inFlight = true;
+        var wrapper = document.getElementById('vote-table-wrapper');
+        var scrollLeft = wrapper ? wrapper.scrollLeft : 0;
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'fetch' },
+            body: formData
+        }).then(function (res) {
+            if (!res.ok) throw new Error(res.statusText);
+            return res.text();
+        }).then(function (html) {
+            if (wrapper) {
+                wrapper.innerHTML = html;
+                wrapper.scrollLeft = scrollLeft;
+            }
+            initTable();
+        }).catch(function (err) {
+            console.error('vote fetch error:', err);
+        }).finally(function () {
+            inFlight = false;
+        });
+    }
+
+    // Intercept vote form submit (poll + admin pages)
+    // Runs after initConfirmIncomplete, so if confirm-incomplete called
+    // preventDefault (first click on incomplete vote), we skip the fetch.
+    document.querySelectorAll('form[data-confirm-incomplete]').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+            if (e.defaultPrevented) return; // two-click pattern blocked it
+            e.preventDefault();
+            // Build FormData from only the inline vote row, not edit rows
+            var formData = new FormData();
+            var nameInput = form.querySelector('#vote-name');
+            if (nameInput) formData.append('name', nameInput.value);
+            var voteRow = nameInput ? nameInput.closest('tr') : null;
+            if (voteRow) {
+                voteRow.querySelectorAll('input[type="hidden"][name^="vote-"]').forEach(function (input) {
+                    formData.append(input.name, input.value);
+                });
+            }
+            fetchAndSwap(form.action, formData);
+            // Clear the name input and reset submit button after successful vote
+            if (nameInput) nameInput.value = '';
+            var btn = form.querySelector('#vote-submit');
+            if (btn) btn.disabled = true;
+        });
+    });
+
+    // Delegated click handler for remove/edit-save buttons (admin page)
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        var action = btn.dataset.action;
+        var form = btn.closest('form[data-confirm-incomplete]');
+        if (!form) return;
+
+        if (action === 'remove') {
+            var formData = new FormData();
+            formData.append('voter_name', btn.dataset.voter);
+            var removeUrl = form.dataset.removeUrl;
+            if (removeUrl) fetchAndSwap(removeUrl, formData);
+        } else if (action === 'edit-save') {
+            var idx = btn.dataset.idx;
+            var editRow = document.getElementById('edit-' + idx);
+            if (!editRow) return;
+            var formData = new FormData();
+            editRow.querySelectorAll('input[name]').forEach(function (input) {
+                formData.append(input.name, input.value);
+            });
+            var editUrl = form.dataset.editUrl;
+            if (editUrl) fetchAndSwap(editUrl, formData);
+        }
+    });
 })();
+
+// Initialize table interactions on page load
+initTable();
 
 // Scroll fade + arrow indicators for horizontally-overflowing containers
 (function () {
