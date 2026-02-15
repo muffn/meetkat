@@ -18,7 +18,7 @@ func LoadTemplates(baseDir string) map[string]*template.Template {
 	}
 
 	funcs := template.FuncMap{
-		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
+		"safeHTML": func(s string) template.HTML { return template.HTML(s) }, // #nosec G203 -- trusted server-rendered content only
 	}
 
 	partial := filepath.Join(baseDir, "web", "templates", "partials", "vote_table.html")
