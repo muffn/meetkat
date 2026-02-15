@@ -1,9 +1,9 @@
 package poll
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
-	"math/rand/v2"
 	"time"
 )
 
@@ -34,8 +34,11 @@ func NewService(repo Repository) *Service {
 
 func generateID() string {
 	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("crypto/rand failed: %v", err))
+	}
 	for i := range b {
-		b[i] = idChars[rand.IntN(len(idChars))]
+		b[i] = idChars[b[i]%byte(len(idChars))]
 	}
 	return string(b)
 }
