@@ -63,6 +63,28 @@ jobs:
         with:
           args: ./...
 
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build CSS
+        run: npm ci && npm run build:css
+
+      - name: Run e2e tests
+        run: go test -v -tags e2e -timeout 120s ./e2e/...
+
   build-verify:
     runs-on: ubuntu-latest
     steps:
