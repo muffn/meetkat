@@ -1,0 +1,24 @@
+name: Cleanup GHCR Tags
+
+on:
+  schedule:
+    - cron: "0 3 * * 0" # Sunday 3 AM UTC
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clean up old GHCR tags
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          package: meetkat
+          delete-untagged: true
+          delete-partial-images: true
+          older-than: 30 days
+          keep-n-tagged: 10
+          exclude-tags: latest,nightly
