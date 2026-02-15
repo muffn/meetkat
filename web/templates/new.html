@@ -212,6 +212,13 @@ function removeDate(btn) {
     }
 }
 
+// Prevent Enter key on inputs from submitting the form
+document.querySelector('form').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+    }
+});
+
 // Init all existing rows
 document.querySelectorAll('.date-row').forEach(initRow);
 updateDeleteButtons();
