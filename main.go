@@ -20,7 +20,7 @@ import (
 func main() {
 	cfg := config.Load()
 
-	if err := os.MkdirAll(filepath.Dir(cfg.DBPath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(cfg.DBPath), 0o750); err != nil {
 		log.Fatalf("create data directory: %v", err)
 	}
 
