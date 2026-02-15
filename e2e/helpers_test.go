@@ -5,6 +5,7 @@ package e2e
 import (
 	"context"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -76,13 +77,16 @@ func seedPoll(t *testing.T, svc *poll.Service, title string, options []string) *
 	return p
 }
 
-// newBrowserCtx creates a headless Chrome context with a 30-second timeout.
+// newBrowserCtx creates a Chrome context with a 30-second timeout.
+// Set E2E_HEADLESS=false to watch the browser during tests.
 // It is automatically cancelled when the test finishes.
 func newBrowserCtx(t *testing.T) context.Context {
 	t.Helper()
 
+	headless := os.Getenv("E2E_HEADLESS") != "false"
+
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Flag("headless", true),
+		chromedp.Flag("headless", headless),
 		chromedp.Flag("disable-gpu", true),
 		chromedp.Flag("no-sandbox", true),
 	)

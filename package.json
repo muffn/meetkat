@@ -5,6 +5,7 @@
     "dev:css": "tailwindcss -i web/static/css/input.css -o web/static/css/style.css --watch",
     "test": "go test ./internal/...",
     "test:e2e": "go test -v -tags e2e -timeout 120s ./e2e/...",
+    "test:e2e:watch": "E2E_HEADLESS=false go test -v -tags e2e -timeout 120s ./e2e/...",
     "test:all": "go test -tags e2e ./..."
   },
   "devDependencies": {

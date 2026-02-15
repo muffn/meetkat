@@ -3,10 +3,37 @@
 package e2e
 
 import (
+	"context"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/chromedp/chromedp"
 )
+
+// waitForClass polls until the element's class attribute contains (or no longer contains) the target string.
+func waitForClass(sel, class string, shouldContain bool) chromedp.ActionFunc {
+	return func(ctx context.Context) error {
+		deadline := time.After(5 * time.Second)
+		for {
+			var classes string
+			if err := chromedp.AttributeValue(sel, "class", &classes, nil, chromedp.ByQuery).Do(ctx); err != nil {
+				return err
+			}
+			if contains(classes, class) == shouldContain {
+				return nil
+			}
+			select {
+			case <-deadline:
+				if shouldContain {
+					return fmt.Errorf("timeout: %q never got class %q (last: %q)", sel, class, classes)
+				}
+				return fmt.Errorf("timeout: %q still has class %q (last: %q)", sel, class, classes)
+			case <-time.After(50 * time.Millisecond):
+			}
+		}
+	}
+}
 
 func TestSettingsPopoverToggle(t *testing.T) {
 	ts := startTestServer(t)
@@ -28,33 +55,22 @@ func TestSettingsPopoverToggle(t *testing.T) {
 		t.Error("expected popover to start hidden (pointer-events-none)")
 	}
 
-	// Click settings button to open.
+	// Click settings button to open, then wait for transition to complete.
 	err = chromedp.Run(ctx,
 		chromedp.Click("#settings-btn", chromedp.ByQuery),
-		chromedp.Sleep(300*1e6),
-		chromedp.AttributeValue("#settings-popover", "class", &classes, nil, chromedp.ByQuery),
+		waitForClass("#settings-popover", "opacity-100", true),
 	)
 	if err != nil {
 		t.Fatalf("open popover: %v", err)
 	}
-	if contains(classes, "pointer-events-none") {
-		t.Error("expected popover to be visible after clicking settings button")
-	}
-	if !contains(classes, "opacity-100") {
-		t.Error("expected popover to have opacity-100 when open")
-	}
 
-	// Click outside to close.
+	// Click outside to close, then wait for transition to complete.
 	err = chromedp.Run(ctx,
 		chromedp.Click("body", chromedp.ByQuery),
-		chromedp.Sleep(300*1e6),
-		chromedp.AttributeValue("#settings-popover", "class", &classes, nil, chromedp.ByQuery),
+		waitForClass("#settings-popover", "pointer-events-none", true),
 	)
 	if err != nil {
 		t.Fatalf("close popover: %v", err)
-	}
-	if !contains(classes, "pointer-events-none") {
-		t.Error("expected popover to be hidden after clicking outside")
 	}
 }
 
@@ -68,15 +84,16 @@ func TestThemeSwitch(t *testing.T) {
 		chromedp.Navigate(ts.URL+"/"),
 		waitForSelector("#settings-btn"),
 
-		// Open settings.
+		// Open settings and wait for popover.
 		chromedp.Click("#settings-btn", chromedp.ByQuery),
-		chromedp.Sleep(300*1e6),
+		waitForClass("#settings-popover", "opacity-100", true),
 
 		// Click the dark theme button.
 		chromedp.Click(`button.theme-btn[data-theme="dark"]`, chromedp.ByQuery),
-		chromedp.Sleep(300*1e6),
 
-		// Check that <html> has class "dark".
+		// Wait for dark class on <html>.
+		waitForClass("html", "dark", true),
+
 		chromedp.AttributeValue("html", "class", &htmlClasses, nil, chromedp.ByQuery),
 	)
 	if err != nil {
@@ -89,9 +106,13 @@ func TestThemeSwitch(t *testing.T) {
 	// Switch back to light.
 	err = chromedp.Run(ctx,
 		chromedp.Click("#settings-btn", chromedp.ByQuery),
-		chromedp.Sleep(300*1e6),
+		waitForClass("#settings-popover", "opacity-100", true),
+
 		chromedp.Click(`button.theme-btn[data-theme="light"]`, chromedp.ByQuery),
-		chromedp.Sleep(300*1e6),
+
+		// Wait for dark class to be removed.
+		waitForClass("html", "dark", false),
+
 		chromedp.AttributeValue("html", "class", &htmlClasses, nil, chromedp.ByQuery),
 	)
 	if err != nil {
