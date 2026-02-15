@@ -11,5 +11,3 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - gosimple
-    - typecheck
