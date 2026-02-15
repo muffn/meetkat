@@ -5,8 +5,8 @@
 {{define "content"}}
 <section class="relative flex min-h-dvh items-center justify-center overflow-hidden bg-background-50">
     <div class="absolute inset-0 overflow-hidden">
-        <div class="absolute -top-24 -right-24 h-96 w-96 rounded-full bg-accent-200/40 blur-3xl"></div>
-        <div class="absolute -bottom-32 -left-32 h-112 w-md rounded-full bg-primary-200/30 blur-3xl"></div>
+        <div class="absolute top-12 -right-40 sm:-top-24 sm:-right-24 h-96 w-96 rounded-full bg-accent-200/40 blur-3xl"></div>
+        <div class="absolute bottom-12 -left-56 sm:-bottom-32 sm:-left-32 h-112 w-md rounded-full bg-primary-200/30 blur-3xl"></div>
         <div class="absolute top-1/3 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-secondary-200/25 blur-3xl"></div>
     </div>
 
@@ -15,9 +15,7 @@
             {{ call .t "notfound.badge" }}
         </span>
 
-        <div class="mt-8 text-8xl leading-none sm:text-9xl">
-            <span aria-hidden="true" class="select-none">&#x1F9A6;</span>
-        </div>
+        <img src="/static/icons/meetkot-searching.svg" alt="meetkat mascot searching" class="mx-auto mt-8 h-40 w-auto dark:brightness-75 sm:h-48 lg:h-56">
 
         <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-text-900 sm:text-5xl">
             {{ call .t "notfound.heading_before" }}
