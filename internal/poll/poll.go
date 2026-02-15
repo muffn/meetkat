@@ -43,7 +43,24 @@ func generateID() string {
 	return string(b)
 }
 
+const (
+	MaxTitleLen       = 200
+	MaxDescriptionLen = 2000
+	MaxNameLen        = 100
+	MaxOptions        = 60
+)
+
 func (s *Service) Create(title, description string, options []string) (*Poll, error) {
+	if len(title) > MaxTitleLen {
+		return nil, fmt.Errorf("title exceeds %d characters", MaxTitleLen)
+	}
+	if len(description) > MaxDescriptionLen {
+		return nil, fmt.Errorf("description exceeds %d characters", MaxDescriptionLen)
+	}
+	if len(options) > MaxOptions {
+		return nil, fmt.Errorf("too many options (max %d)", MaxOptions)
+	}
+
 	p := &Poll{
 		ID:          generateID(),
 		AdminID:     generateID(),
@@ -74,6 +91,9 @@ func (s *Service) AddVote(pollID, name string, responses map[string]bool) error 
 	if name == "" {
 		return errors.New("name must not be empty")
 	}
+	if len(name) > MaxNameLen {
+		return fmt.Errorf("name exceeds %d characters", MaxNameLen)
+	}
 	return s.repo.AddVote(pollID, Vote{Name: name, Responses: responses})
 }
 
@@ -84,6 +104,9 @@ func (s *Service) Delete(pollID string) error {
 func (s *Service) UpdateVote(pollID, oldName, newName string, responses map[string]bool) error {
 	if newName == "" {
 		return errors.New("name must not be empty")
+	}
+	if len(newName) > MaxNameLen {
+		return fmt.Errorf("name exceeds %d characters", MaxNameLen)
 	}
 	return s.repo.UpdateVote(pollID, oldName, Vote{Name: newName, Responses: responses})
 }
