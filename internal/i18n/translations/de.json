@@ -35,9 +35,7 @@
   "new.add_next_day": "+1 Tag",
   "new.add_next_week": "+1 Woche",
   "new.submit": "Umfrage erstellen",
-  "new.label_answer_mode": "Antwortmöglichkeiten",
-  "new.answer_mode_yn": "Ja / Nein",
-  "new.answer_mode_ymn": "Ja / Vielleicht / Nein",
+  "new.label_include_maybe": "\u201EVielleicht\u201C als Antwortoption anbieten",
   "new.error_no_title": "Bitte gib einen Titel für die Umfrage ein.",
   "new.error_no_dates": "Bitte füge mindestens eine Terminoption hinzu.",
 

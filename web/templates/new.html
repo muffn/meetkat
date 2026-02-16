@@ -44,18 +44,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-text-700">{{ call $.t "new.label_answer_mode" }}</label>
-                    <input type="hidden" id="answer-mode" name="answer_mode" value="{{if .formAnswerMode}}{{.formAnswerMode}}{{else}}yn{{end}}">
-                    <div class="mt-2 inline-flex rounded-lg border border-background-300 p-0.5" role="radiogroup">
-                        <button type="button" class="answer-mode-btn rounded-md px-3 py-1.5 text-sm font-medium transition {{if or (not .formAnswerMode) (eq .formAnswerMode "yn")}}bg-white shadow-sm ring-1 ring-text-900/10 text-text-900 dark:bg-background-300 dark:ring-transparent{{else}}text-text-500 hover:text-text-700{{end}}"
-                                data-mode="yn" role="radio" aria-checked="{{if or (not .formAnswerMode) (eq .formAnswerMode "yn")}}true{{else}}false{{end}}">
-                            {{ call $.t "new.answer_mode_yn" }}
-                        </button>
-                        <button type="button" class="answer-mode-btn rounded-md px-3 py-1.5 text-sm font-medium transition {{if eq .formAnswerMode "ymn"}}bg-white shadow-sm ring-1 ring-text-900/10 text-text-900 dark:bg-background-300 dark:ring-transparent{{else}}text-text-500 hover:text-text-700{{end}}"
-                                data-mode="ymn" role="radio" aria-checked="{{if eq .formAnswerMode "ymn"}}true{{else}}false{{end}}">
-                            {{ call $.t "new.answer_mode_ymn" }}
-                        </button>
-                    </div>
+                    <input type="hidden" id="answer-mode" name="answer_mode" value="{{if eq .formAnswerMode "ymn"}}ymn{{else}}yn{{end}}">
+                    <label class="mt-1 inline-flex cursor-pointer items-center gap-2 text-sm text-text-700">
+                        <input type="checkbox" id="answer-mode-checkbox" {{if eq .formAnswerMode "ymn"}}checked{{end}}
+                               class="size-4 rounded border-background-300 text-primary-500 focus:ring-2 focus:ring-primary-200">
+                        {{ call $.t "new.label_include_maybe" }}
+                    </label>
                 </div>
 
                 <div>
@@ -243,22 +237,9 @@ desktopMQ.addEventListener('change', function () {
     document.querySelectorAll('.date-input').forEach(applyMode);
 });
 
-// Answer mode toggle
-var checkedClasses = ['bg-white', 'shadow-sm', 'ring-1', 'ring-text-900/10', 'text-text-900', 'dark:bg-background-300', 'dark:ring-transparent'];
-var uncheckedClasses = ['text-text-500', 'hover:text-text-700'];
-document.querySelectorAll('.answer-mode-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        var hidden = document.getElementById('answer-mode');
-        hidden.value = btn.dataset.mode;
-        document.querySelectorAll('.answer-mode-btn').forEach(function (b) {
-            b.classList.remove.apply(b.classList, checkedClasses);
-            b.classList.add.apply(b.classList, uncheckedClasses);
-            b.setAttribute('aria-checked', 'false');
-        });
-        btn.classList.remove.apply(btn.classList, uncheckedClasses);
-        btn.classList.add.apply(btn.classList, checkedClasses);
-        btn.setAttribute('aria-checked', 'true');
-    });
+// Answer mode checkbox
+document.getElementById('answer-mode-checkbox').addEventListener('change', function () {
+    document.getElementById('answer-mode').value = this.checked ? 'ymn' : 'yn';
 });
 </script>
 {{end}}

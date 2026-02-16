@@ -39,21 +39,15 @@
             <td class="px-4 py-3 text-center">
                 {{if eq (index $responses .) "yes"}}
                 <span class="inline-flex size-6 items-center justify-center rounded-full bg-green-100 text-green-600">
-                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
-                    </svg>
+                    <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/vote-yes.svg);mask-image:url(/static/icons/vote-yes.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                 </span>
                 {{else if eq (index $responses .) "maybe"}}
                 <span class="inline-flex size-6 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
-                    </svg>
+                    <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/vote-maybe.svg);mask-image:url(/static/icons/vote-maybe.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                 </span>
                 {{else}}
                 <span class="inline-flex size-6 items-center justify-center rounded-full bg-red-100 text-red-500">
-                    <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                    </svg>
+                    <span class="size-4 bg-current" style="-webkit-mask-image:url(/static/icons/vote-no.svg);mask-image:url(/static/icons/vote-no.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                 </span>
                 {{end}}
             </td>
@@ -91,25 +85,19 @@
                     <!-- Yes -->
                     <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 transition hover:bg-green-50 hover:text-green-400 {{if eq (index $responses .) "yes"}}bg-green-100 text-green-600{{else}}bg-background-50 text-background-300{{end}}"
                             data-value="yes" aria-pressed="{{if eq (index $responses .) "yes"}}true{{else}}false{{end}}">
-                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
-                        </svg>
+                        <span class="size-3.5 bg-current" style="-webkit-mask-image:url(/static/icons/vote-yes.svg);mask-image:url(/static/icons/vote-yes.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
                     {{if eq $.answerMode "ymn"}}
                     <!-- Maybe -->
                     <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 transition hover:bg-amber-50 hover:text-amber-400 {{if eq (index $responses .) "maybe"}}bg-amber-100 text-amber-600{{else}}bg-background-50 text-background-300{{end}}"
                             data-value="maybe" aria-pressed="{{if eq (index $responses .) "maybe"}}true{{else}}false{{end}}">
-                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
-                        </svg>
+                        <span class="size-3.5 bg-current" style="-webkit-mask-image:url(/static/icons/vote-maybe.svg);mask-image:url(/static/icons/vote-maybe.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
                     {{end}}
                     <!-- No -->
                     <button type="button" class="vote-btn flex size-8 items-center justify-center transition hover:bg-red-50 hover:text-red-400 {{if eq (index $responses .) "no"}}bg-red-100 text-red-500{{else}}bg-background-50 text-background-300{{end}}"
                             data-value="no" aria-pressed="{{if eq (index $responses .) "no"}}true{{else}}false{{end}}">
-                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                        </svg>
+                        <span class="size-3.5 bg-current" style="-webkit-mask-image:url(/static/icons/vote-no.svg);mask-image:url(/static/icons/vote-no.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
                 </div>
             </td>
@@ -155,25 +143,19 @@
                     <!-- Yes -->
                     <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 bg-background-50 text-background-300 transition hover:bg-green-50 hover:text-green-400"
                             data-value="yes" aria-label="{{ call $.t "poll.aria_available" . }}" aria-pressed="false">
-                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd"/>
-                        </svg>
+                        <span class="size-3.5 bg-current" style="-webkit-mask-image:url(/static/icons/vote-yes.svg);mask-image:url(/static/icons/vote-yes.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
                     {{if eq $.answerMode "ymn"}}
                     <!-- Maybe -->
                     <button type="button" class="vote-btn flex size-8 items-center justify-center border-b border-background-300 bg-background-50 text-background-300 transition hover:bg-amber-50 hover:text-amber-400"
                             data-value="maybe" aria-label="{{ call $.t "poll.aria_maybe" . }}" aria-pressed="false">
-                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
-                        </svg>
+                        <span class="size-3.5 bg-current" style="-webkit-mask-image:url(/static/icons/vote-maybe.svg);mask-image:url(/static/icons/vote-maybe.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
                     {{end}}
                     <!-- No -->
                     <button type="button" class="vote-btn flex size-8 items-center justify-center bg-background-50 text-background-300 transition hover:bg-red-50 hover:text-red-400"
                             data-value="no" aria-label="{{ call $.t "poll.aria_not_available" . }}" aria-pressed="false">
-                        <svg class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/>
-                        </svg>
+                        <span class="size-3.5 bg-current" style="-webkit-mask-image:url(/static/icons/vote-no.svg);mask-image:url(/static/icons/vote-no.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     </button>
                 </div>
             </td>
@@ -193,11 +175,7 @@
                     {{if and $.winners (index $.winners .)}}
                     <span class="absolute -left-4 top-1/2 size-3 -translate-y-1/2 bg-amber-400" style="-webkit-mask-image:url(/static/icons/star.svg);mask-image:url(/static/icons/star.svg);-webkit-mask-size:contain;mask-size:contain" aria-hidden="true"></span>
                     {{end}}
-                    {{if eq $.answerMode "ymn"}}
-                        {{(index $.totals .).Yes}} + {{(index $.totals .).Maybe}}
-                    {{else}}
-                        {{(index $.totals .).Yes}}
-                    {{end}}
+                    {{(index $.totals .).Yes}}{{if gt (index $.totals .).Maybe 0}} + {{(index $.totals .).Maybe}}{{end}}
                 </span>
             </td>
             {{end}}
