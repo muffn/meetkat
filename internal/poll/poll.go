@@ -11,7 +11,7 @@ const idChars = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 type Vote struct {
 	Name      string
-	Responses map[string]bool // key = option string, value = available
+	Responses map[string]string // key = option string, value = "yes", "no", "maybe", or ""
 }
 
 type Poll struct {
@@ -19,9 +19,15 @@ type Poll struct {
 	AdminID     string
 	Title       string
 	Description string
+	AnswerMode  string // "yn" (yes/no) or "ymn" (yes/maybe/no); default "yn"
 	Options     []string
 	Votes       []Vote
 	CreatedAt   time.Time
+}
+
+type OptionTotal struct {
+	Yes   int
+	Maybe int
 }
 
 type Service struct {
@@ -50,7 +56,7 @@ const (
 	MaxOptions        = 60
 )
 
-func (s *Service) Create(title, description string, options []string) (*Poll, error) {
+func (s *Service) Create(title, description, answerMode string, options []string) (*Poll, error) {
 	if len(title) > MaxTitleLen {
 		return nil, fmt.Errorf("title exceeds %d characters", MaxTitleLen)
 	}
@@ -60,12 +66,16 @@ func (s *Service) Create(title, description string, options []string) (*Poll, er
 	if len(options) > MaxOptions {
 		return nil, fmt.Errorf("too many options (max %d)", MaxOptions)
 	}
+	if answerMode != "yn" && answerMode != "ymn" {
+		answerMode = "yn"
+	}
 
 	p := &Poll{
 		ID:          generateID(),
 		AdminID:     generateID(),
 		Title:       title,
 		Description: description,
+		AnswerMode:  answerMode,
 		Options:     options,
 		CreatedAt:   time.Now(),
 	}
@@ -87,7 +97,7 @@ func (s *Service) RemoveVote(pollID, voterName string) error {
 	return s.repo.RemoveVote(pollID, voterName)
 }
 
-func (s *Service) AddVote(pollID, name string, responses map[string]bool) error {
+func (s *Service) AddVote(pollID, name string, responses map[string]string) error {
 	if name == "" {
 		return errors.New("name must not be empty")
 	}
@@ -101,7 +111,7 @@ func (s *Service) Delete(pollID string) error {
 	return s.repo.Delete(pollID)
 }
 
-func (s *Service) UpdateVote(pollID, oldName, newName string, responses map[string]bool) error {
+func (s *Service) UpdateVote(pollID, oldName, newName string, responses map[string]string) error {
 	if newName == "" {
 		return errors.New("name must not be empty")
 	}
@@ -111,14 +121,19 @@ func (s *Service) UpdateVote(pollID, oldName, newName string, responses map[stri
 	return s.repo.UpdateVote(pollID, oldName, Vote{Name: newName, Responses: responses})
 }
 
-func Totals(p *Poll) map[string]int {
-	totals := make(map[string]int, len(p.Options))
+func Totals(p *Poll) map[string]OptionTotal {
+	totals := make(map[string]OptionTotal, len(p.Options))
 	for _, opt := range p.Options {
+		var t OptionTotal
 		for _, v := range p.Votes {
-			if v.Responses[opt] {
-				totals[opt]++
+			switch v.Responses[opt] {
+			case "yes":
+				t.Yes++
+			case "maybe":
+				t.Maybe++
 			}
 		}
+		totals[opt] = t
 	}
 	return totals
 }

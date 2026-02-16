@@ -24,6 +24,7 @@ func TestCreateAndGet(t *testing.T) {
 		AdminID:     "adm12345",
 		Title:       "Dinner",
 		Description: "Pick a day",
+		AnswerMode:  "yn",
 		Options:     []string{"Mon", "Tue", "Wed"},
 	}
 
@@ -47,6 +48,9 @@ func TestCreateAndGet(t *testing.T) {
 	if got.AdminID != "adm12345" {
 		t.Errorf("admin_id: got %q, want %q", got.AdminID, "adm12345")
 	}
+	if got.AnswerMode != "yn" {
+		t.Errorf("answer_mode: got %q, want %q", got.AnswerMode, "yn")
+	}
 	if len(got.Options) != 3 {
 		t.Fatalf("options: got %d, want 3", len(got.Options))
 	}
@@ -58,6 +62,47 @@ func TestCreateAndGet(t *testing.T) {
 	}
 	if len(got.Votes) != 0 {
 		t.Errorf("votes: got %d, want 0", len(got.Votes))
+	}
+}
+
+func TestCreateAndGetYMN(t *testing.T) {
+	repo := openTestDB(t)
+
+	p := &poll.Poll{
+		ID:         "ymn12345",
+		AdminID:    "adm_ymn1",
+		Title:      "YMN Poll",
+		AnswerMode: "ymn",
+		Options:    []string{"A", "B"},
+	}
+	if err := repo.Create(p); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	err := repo.AddVote("ymn12345", poll.Vote{
+		Name:      "Alice",
+		Responses: map[string]string{"A": "yes", "B": "maybe"},
+	})
+	if err != nil {
+		t.Fatalf("add vote: %v", err)
+	}
+
+	got, err := repo.GetByPublicID("ymn12345")
+	if err != nil {
+		t.Fatalf("get: %v", err)
+	}
+	if got.AnswerMode != "ymn" {
+		t.Errorf("answer_mode: got %q, want ymn", got.AnswerMode)
+	}
+	if len(got.Votes) != 1 {
+		t.Fatalf("votes: got %d, want 1", len(got.Votes))
+	}
+	v := got.Votes[0]
+	if v.Responses["A"] != "yes" {
+		t.Errorf("A: got %q, want yes", v.Responses["A"])
+	}
+	if v.Responses["B"] != "maybe" {
+		t.Errorf("B: got %q, want maybe", v.Responses["B"])
 	}
 }
 
@@ -129,7 +174,7 @@ func TestAddVote(t *testing.T) {
 
 	err := repo.AddVote("vote1234", poll.Vote{
 		Name:      "Alice",
-		Responses: map[string]bool{"Mon": true, "Tue": false},
+		Responses: map[string]string{"Mon": "yes", "Tue": "no"},
 	})
 	if err != nil {
 		t.Fatalf("add vote: %v", err)
@@ -149,18 +194,18 @@ func TestAddVote(t *testing.T) {
 	if v.Name != "Alice" {
 		t.Errorf("name: got %q, want Alice", v.Name)
 	}
-	if !v.Responses["Mon"] {
-		t.Error("expected Mon to be true")
+	if v.Responses["Mon"] != "yes" {
+		t.Error("expected Mon to be yes")
 	}
-	if v.Responses["Tue"] {
-		t.Error("expected Tue to be false")
+	if v.Responses["Tue"] != "no" {
+		t.Error("expected Tue to be no")
 	}
 }
 
 func TestAddVoteNonexistentPoll(t *testing.T) {
 	repo := openTestDB(t)
 
-	err := repo.AddVote("nope", poll.Vote{Name: "Bob", Responses: map[string]bool{}})
+	err := repo.AddVote("nope", poll.Vote{Name: "Bob", Responses: map[string]string{}})
 	if err == nil {
 		t.Fatal("expected error for nonexistent poll")
 	}
@@ -179,8 +224,8 @@ func TestRemoveVote(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 
-	_ = repo.AddVote("rmvote12", poll.Vote{Name: "Alice", Responses: map[string]bool{"Mon": true}})
-	_ = repo.AddVote("rmvote12", poll.Vote{Name: "Bob", Responses: map[string]bool{"Tue": true}})
+	_ = repo.AddVote("rmvote12", poll.Vote{Name: "Alice", Responses: map[string]string{"Mon": "yes"}})
+	_ = repo.AddVote("rmvote12", poll.Vote{Name: "Bob", Responses: map[string]string{"Tue": "yes"}})
 
 	if err := repo.RemoveVote("rmvote12", "Alice"); err != nil {
 		t.Fatalf("remove vote: %v", err)
@@ -227,8 +272,8 @@ func TestMultipleVotes(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 
-	_ = repo.AddVote("multi123", poll.Vote{Name: "Alice", Responses: map[string]bool{"A": true, "B": true}})
-	_ = repo.AddVote("multi123", poll.Vote{Name: "Bob", Responses: map[string]bool{"A": true, "B": false}})
+	_ = repo.AddVote("multi123", poll.Vote{Name: "Alice", Responses: map[string]string{"A": "yes", "B": "yes"}})
+	_ = repo.AddVote("multi123", poll.Vote{Name: "Bob", Responses: map[string]string{"A": "yes", "B": "no"}})
 
 	got, _ := repo.GetByPublicID("multi123")
 	if len(got.Votes) != 2 {
@@ -255,14 +300,14 @@ func TestUpdateVotePreservesPosition(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 
-	_ = repo.AddVote("upd12345", poll.Vote{Name: "Alice", Responses: map[string]bool{"Mon": true, "Tue": false}})
-	_ = repo.AddVote("upd12345", poll.Vote{Name: "Bob", Responses: map[string]bool{"Mon": false, "Tue": true}})
-	_ = repo.AddVote("upd12345", poll.Vote{Name: "Carol", Responses: map[string]bool{"Mon": true, "Tue": true}})
+	_ = repo.AddVote("upd12345", poll.Vote{Name: "Alice", Responses: map[string]string{"Mon": "yes", "Tue": "no"}})
+	_ = repo.AddVote("upd12345", poll.Vote{Name: "Bob", Responses: map[string]string{"Mon": "no", "Tue": "yes"}})
+	_ = repo.AddVote("upd12345", poll.Vote{Name: "Carol", Responses: map[string]string{"Mon": "yes", "Tue": "yes"}})
 
 	// Update Bob's name and responses.
 	err := repo.UpdateVote("upd12345", "Bob", poll.Vote{
 		Name:      "Bobby",
-		Responses: map[string]bool{"Mon": true, "Tue": true},
+		Responses: map[string]string{"Mon": "yes", "Tue": "yes"},
 	})
 	if err != nil {
 		t.Fatalf("update vote: %v", err)
@@ -282,11 +327,11 @@ func TestUpdateVotePreservesPosition(t *testing.T) {
 	}
 
 	// Bobby's responses should be updated.
-	if !got.Votes[1].Responses["Mon"] {
-		t.Error("expected Bobby's Mon to be true")
+	if got.Votes[1].Responses["Mon"] != "yes" {
+		t.Error("expected Bobby's Mon to be yes")
 	}
-	if !got.Votes[1].Responses["Tue"] {
-		t.Error("expected Bobby's Tue to be true")
+	if got.Votes[1].Responses["Tue"] != "yes" {
+		t.Error("expected Bobby's Tue to be yes")
 	}
 }
 
@@ -303,7 +348,7 @@ func TestUpdateVoteNotFound(t *testing.T) {
 		t.Fatalf("create: %v", err)
 	}
 
-	err := repo.UpdateVote("updnf123", "Nobody", poll.Vote{Name: "X", Responses: map[string]bool{"A": true}})
+	err := repo.UpdateVote("updnf123", "Nobody", poll.Vote{Name: "X", Responses: map[string]string{"A": "yes"}})
 	if err == nil {
 		t.Fatal("expected error for nonexistent voter")
 	}
@@ -319,12 +364,12 @@ func TestServiceWithSQLiteRepository(t *testing.T) {
 	repo := NewPollRepository(db)
 	svc := poll.NewService(repo)
 
-	p, err := svc.Create("End-to-end", "Test full flow", []string{"X", "Y"})
+	p, err := svc.Create("End-to-end", "Test full flow", "yn", []string{"X", "Y"})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
 
-	if err := svc.AddVote(p.ID, "Carol", map[string]bool{"X": true, "Y": false}); err != nil {
+	if err := svc.AddVote(p.ID, "Carol", map[string]string{"X": "yes", "Y": "no"}); err != nil {
 		t.Fatalf("add vote: %v", err)
 	}
 
@@ -343,10 +388,10 @@ func TestServiceWithSQLiteRepository(t *testing.T) {
 	}
 
 	totals := poll.Totals(got)
-	if totals["X"] != 1 {
-		t.Errorf("totals[X]: got %d, want 1", totals["X"])
+	if totals["X"].Yes != 1 {
+		t.Errorf("totals[X].Yes: got %d, want 1", totals["X"].Yes)
 	}
-	if totals["Y"] != 0 {
-		t.Errorf("totals[Y]: got %d, want 0", totals["Y"])
+	if totals["Y"].Yes != 0 {
+		t.Errorf("totals[Y].Yes: got %d, want 0", totals["Y"].Yes)
 	}
 }

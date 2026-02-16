@@ -66,7 +66,7 @@ func postForm(router http.Handler, path string, form url.Values) *httptest.Respo
 
 // seedPoll creates a poll directly via the service for testing.
 func seedPoll(svc *poll.Service, title string, options []string) *poll.Poll {
-	p, err := svc.Create(title, "", options)
+	p, err := svc.Create(title, "", "yn", options)
 	if err != nil {
 		panic(err)
 	}
@@ -98,11 +98,11 @@ func TestVoteSubmission(t *testing.T) {
 	if v.Name != "Alice" {
 		t.Errorf("expected name Alice, got %q", v.Name)
 	}
-	if !v.Responses["2025-06-10"] {
-		t.Error("expected 2025-06-10 to be true")
+	if v.Responses["2025-06-10"] != "yes" {
+		t.Error("expected 2025-06-10 to be yes")
 	}
-	if v.Responses["2025-06-11"] {
-		t.Error("expected 2025-06-11 to be false")
+	if v.Responses["2025-06-11"] != "no" {
+		t.Error("expected 2025-06-11 to be no")
 	}
 }
 
@@ -176,11 +176,11 @@ func TestVoteResponseValues(t *testing.T) {
 	v := got.Votes[0]
 	tests := []struct {
 		option string
-		want   bool
+		want   string
 	}{
-		{"Mon", true},
-		{"Tue", false},
-		{"Wed", false},
+		{"Mon", "yes"},
+		{"Tue", "no"},
+		{"Wed", "no"},
 	}
 	for _, tt := range tests {
 		if got := v.Responses[tt.option]; got != tt.want {
@@ -219,8 +219,8 @@ func TestPollViewWithVotes(t *testing.T) {
 	router, svc := setupTestRouter()
 	p := seedPoll(svc, "Team dinner", []string{"2025-10-01", "2025-10-02"})
 
-	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"2025-10-01": true, "2025-10-02": false})
-	_ = svc.AddVote(p.ID, "Bob", map[string]bool{"2025-10-01": true, "2025-10-02": true})
+	_ = svc.AddVote(p.ID, "Alice", map[string]string{"2025-10-01": "yes", "2025-10-02": "no"})
+	_ = svc.AddVote(p.ID, "Bob", map[string]string{"2025-10-01": "yes", "2025-10-02": "yes"})
 
 	req := httptest.NewRequest(http.MethodGet, "/poll/"+p.ID, nil)
 	w := httptest.NewRecorder()
@@ -291,7 +291,7 @@ func TestCreatePollRedirectsToAdmin(t *testing.T) {
 func TestShowAdmin(t *testing.T) {
 	router, svc := setupTestRouter()
 	p := seedPoll(svc, "Admin poll", []string{"Mon", "Tue"})
-	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
+	_ = svc.AddVote(p.ID, "Alice", map[string]string{"Mon": "yes", "Tue": "no"})
 
 	req := httptest.NewRequest(http.MethodGet, "/poll/"+p.AdminID+"/admin", nil)
 	w := httptest.NewRecorder()
@@ -331,8 +331,8 @@ func TestShowAdminNotFound(t *testing.T) {
 func TestRemoveVoteHandler(t *testing.T) {
 	router, svc := setupTestRouter()
 	p := seedPoll(svc, "Remove test", []string{"Mon"})
-	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true})
-	_ = svc.AddVote(p.ID, "Bob", map[string]bool{"Mon": true})
+	_ = svc.AddVote(p.ID, "Alice", map[string]string{"Mon": "yes"})
+	_ = svc.AddVote(p.ID, "Bob", map[string]string{"Mon": "yes"})
 
 	form := url.Values{
 		"voter_name": {"Alice"},
@@ -359,7 +359,7 @@ func TestRemoveVoteHandler(t *testing.T) {
 func TestDeletePollHandler(t *testing.T) {
 	router, svc := setupTestRouter()
 	p := seedPoll(svc, "Delete me", []string{"Mon"})
-	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true})
+	_ = svc.AddVote(p.ID, "Alice", map[string]string{"Mon": "yes"})
 
 	form := url.Values{}
 	w := postForm(router, "/poll/"+p.AdminID+"/admin/delete", form)
@@ -391,7 +391,7 @@ func TestDeletePollNotFound(t *testing.T) {
 func TestUpdateVoteHandler(t *testing.T) {
 	router, svc := setupTestRouter()
 	p := seedPoll(svc, "Edit test", []string{"Mon", "Tue"})
-	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
+	_ = svc.AddVote(p.ID, "Alice", map[string]string{"Mon": "yes", "Tue": "no"})
 
 	form := url.Values{
 		"old_name": {"Alice"},
@@ -413,20 +413,20 @@ func TestUpdateVoteHandler(t *testing.T) {
 	if v.Name != "Alicia" {
 		t.Errorf("expected name Alicia, got %q", v.Name)
 	}
-	if v.Responses["Mon"] {
-		t.Error("expected Mon to be false")
+	if v.Responses["Mon"] != "no" {
+		t.Error("expected Mon to be no")
 	}
-	if !v.Responses["Tue"] {
-		t.Error("expected Tue to be true")
+	if v.Responses["Tue"] != "yes" {
+		t.Error("expected Tue to be yes")
 	}
 }
 
 func TestUpdateVotePreservesPosition(t *testing.T) {
 	router, svc := setupTestRouter()
 	p := seedPoll(svc, "Position test", []string{"Mon", "Tue"})
-	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
-	_ = svc.AddVote(p.ID, "Bob", map[string]bool{"Mon": false, "Tue": true})
-	_ = svc.AddVote(p.ID, "Carol", map[string]bool{"Mon": true, "Tue": true})
+	_ = svc.AddVote(p.ID, "Alice", map[string]string{"Mon": "yes", "Tue": "no"})
+	_ = svc.AddVote(p.ID, "Bob", map[string]string{"Mon": "no", "Tue": "yes"})
+	_ = svc.AddVote(p.ID, "Carol", map[string]string{"Mon": "yes", "Tue": "yes"})
 
 	// Edit Bob (middle vote) — should stay in position 1.
 	form := url.Values{
@@ -455,7 +455,7 @@ func TestUpdateVotePreservesPosition(t *testing.T) {
 func TestUpdateVoteEmptyName(t *testing.T) {
 	router, svc := setupTestRouter()
 	p := seedPoll(svc, "Edit empty", []string{"Mon"})
-	_ = svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true})
+	_ = svc.AddVote(p.ID, "Alice", map[string]string{"Mon": "yes"})
 
 	form := url.Values{
 		"old_name": {"Alice"},

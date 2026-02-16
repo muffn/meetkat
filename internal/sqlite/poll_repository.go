@@ -24,9 +24,13 @@ func (r *PollRepository) Create(p *poll.Poll) error {
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	answerMode := p.AnswerMode
+	if answerMode == "" {
+		answerMode = "yn"
+	}
 	res, err := tx.Exec(
-		"INSERT INTO polls (public_id, admin_id, title, description, created_at) VALUES (?, ?, ?, ?, ?)",
-		p.ID, p.AdminID, p.Title, p.Description, p.CreatedAt.UTC().Format(time.RFC3339),
+		"INSERT INTO polls (public_id, admin_id, title, description, created_at, answer_mode) VALUES (?, ?, ?, ?, ?, ?)",
+		p.ID, p.AdminID, p.Title, p.Description, p.CreatedAt.UTC().Format(time.RFC3339), answerMode,
 	)
 	if err != nil {
 		return fmt.Errorf("insert poll: %w", err)
@@ -52,14 +56,14 @@ func (r *PollRepository) Create(p *poll.Poll) error {
 
 func (r *PollRepository) GetByPublicID(publicID string) (*poll.Poll, error) {
 	return r.getPollByQuery(
-		"SELECT id, public_id, admin_id, title, description, created_at FROM polls WHERE public_id = ?",
+		"SELECT id, public_id, admin_id, title, description, created_at, answer_mode FROM polls WHERE public_id = ?",
 		publicID,
 	)
 }
 
 func (r *PollRepository) GetByAdminID(adminID string) (*poll.Poll, error) {
 	return r.getPollByQuery(
-		"SELECT id, public_id, admin_id, title, description, created_at FROM polls WHERE admin_id = ?",
+		"SELECT id, public_id, admin_id, title, description, created_at, answer_mode FROM polls WHERE admin_id = ?",
 		adminID,
 	)
 }
@@ -69,7 +73,7 @@ func (r *PollRepository) getPollByQuery(query, value string) (*poll.Poll, error)
 	var p poll.Poll
 	var createdAt string
 
-	err := r.db.QueryRow(query, value).Scan(&rowID, &p.ID, &p.AdminID, &p.Title, &p.Description, &createdAt)
+	err := r.db.QueryRow(query, value).Scan(&rowID, &p.ID, &p.AdminID, &p.Title, &p.Description, &createdAt, &p.AnswerMode)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -148,7 +152,7 @@ func (r *PollRepository) getPollByQuery(query, value string) (*poll.Poll, error)
 			return nil, fmt.Errorf("query responses for vote %d: %w", vr.id, err)
 		}
 
-		responses := make(map[string]bool, len(options))
+		responses := make(map[string]string, len(options))
 		for respRows.Next() {
 			var optID int64
 			var available int
@@ -157,7 +161,7 @@ func (r *PollRepository) getPollByQuery(query, value string) (*poll.Poll, error)
 				return nil, fmt.Errorf("scan response: %w", err)
 			}
 			if label, ok := optionByID[optID]; ok {
-				responses[label] = available != 0
+				responses[label] = availableIntToString(available)
 			}
 		}
 		_ = respRows.Close()
@@ -237,18 +241,14 @@ func (r *PollRepository) AddVote(pollID string, vote poll.Vote) error {
 	}
 
 	// Insert vote responses.
-	for label, available := range vote.Responses {
+	for label, value := range vote.Responses {
 		optID, ok := optionIDByLabel[label]
 		if !ok {
 			continue
 		}
-		avail := 0
-		if available {
-			avail = 1
-		}
 		_, err := tx.Exec(
 			"INSERT INTO vote_responses (vote_id, option_id, available) VALUES (?, ?, ?)",
-			voteID, optID, avail,
+			voteID, optID, availableStringToInt(value),
 		)
 		if err != nil {
 			return fmt.Errorf("insert response for %q: %w", label, err)
@@ -327,18 +327,14 @@ func (r *PollRepository) UpdateVote(pollID string, oldName string, vote poll.Vot
 	}
 
 	// Upsert vote responses.
-	for label, available := range vote.Responses {
+	for label, value := range vote.Responses {
 		optID, ok := optionIDByLabel[label]
 		if !ok {
 			continue
 		}
-		avail := 0
-		if available {
-			avail = 1
-		}
 		_, err := tx.Exec(
 			"INSERT INTO vote_responses (vote_id, option_id, available) VALUES (?, ?, ?) ON CONFLICT(vote_id, option_id) DO UPDATE SET available = excluded.available",
-			voteID, optID, avail,
+			voteID, optID, availableStringToInt(value),
 		)
 		if err != nil {
 			return fmt.Errorf("upsert response for %q: %w", label, err)
@@ -346,4 +342,28 @@ func (r *PollRepository) UpdateVote(pollID string, oldName string, vote poll.Vot
 	}
 
 	return tx.Commit()
+}
+
+// availableStringToInt maps response strings to DB integers: "yes"->1, "maybe"->2, else->0.
+func availableStringToInt(s string) int {
+	switch s {
+	case "yes":
+		return 1
+	case "maybe":
+		return 2
+	default:
+		return 0
+	}
+}
+
+// availableIntToString maps DB integers to response strings: 1->"yes", 2->"maybe", else->"no".
+func availableIntToString(i int) string {
+	switch i {
+	case 1:
+		return "yes"
+	case 2:
+		return "maybe"
+	default:
+		return "no"
+	}
 }

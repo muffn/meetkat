@@ -126,7 +126,7 @@ function initVoteButtons(root) {
             hidden.value = btn.dataset.value;
 
             buttons.forEach(function (b) {
-                b.classList.remove('bg-green-100', 'text-green-600', 'bg-red-100', 'text-red-500');
+                b.classList.remove('bg-green-100', 'text-green-600', 'bg-amber-100', 'text-amber-600', 'bg-red-100', 'text-red-500');
                 b.classList.add('bg-background-50', 'text-background-300');
                 b.setAttribute('aria-pressed', 'false');
             });
@@ -134,6 +134,8 @@ function initVoteButtons(root) {
             btn.classList.remove('bg-background-50', 'text-background-300');
             if (btn.dataset.value === 'yes') {
                 btn.classList.add('bg-green-100', 'text-green-600');
+            } else if (btn.dataset.value === 'maybe') {
+                btn.classList.add('bg-amber-100', 'text-amber-600');
             } else {
                 btn.classList.add('bg-red-100', 'text-red-500');
             }

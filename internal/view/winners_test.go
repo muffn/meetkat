@@ -2,12 +2,14 @@ package view
 
 import (
 	"testing"
+
+	"meetkat/internal/poll"
 )
 
 func TestWinningOptions(t *testing.T) {
 	tests := []struct {
 		name   string
-		totals map[string]int
+		totals map[string]poll.OptionTotal
 		want   map[string]bool
 	}{
 		{
@@ -17,23 +19,28 @@ func TestWinningOptions(t *testing.T) {
 		},
 		{
 			name:   "all zeros",
-			totals: map[string]int{"a": 0, "b": 0},
+			totals: map[string]poll.OptionTotal{"a": {Yes: 0}, "b": {Yes: 0}},
 			want:   nil,
 		},
 		{
 			name:   "single winner",
-			totals: map[string]int{"a": 3, "b": 1, "c": 2},
+			totals: map[string]poll.OptionTotal{"a": {Yes: 3}, "b": {Yes: 1}, "c": {Yes: 2}},
 			want:   map[string]bool{"a": true},
 		},
 		{
 			name:   "tie",
-			totals: map[string]int{"a": 2, "b": 2, "c": 1},
+			totals: map[string]poll.OptionTotal{"a": {Yes: 2}, "b": {Yes: 2}, "c": {Yes: 1}},
 			want:   map[string]bool{"a": true, "b": true},
 		},
 		{
 			name:   "all tied",
-			totals: map[string]int{"a": 1, "b": 1, "c": 1},
+			totals: map[string]poll.OptionTotal{"a": {Yes: 1}, "b": {Yes: 1}, "c": {Yes: 1}},
 			want:   map[string]bool{"a": true, "b": true, "c": true},
+		},
+		{
+			name:   "maybe does not count for winner",
+			totals: map[string]poll.OptionTotal{"a": {Yes: 1, Maybe: 5}, "b": {Yes: 2, Maybe: 0}},
+			want:   map[string]bool{"b": true},
 		},
 	}
 

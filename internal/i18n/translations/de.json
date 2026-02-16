@@ -35,6 +35,9 @@
   "new.add_next_day": "+1 Tag",
   "new.add_next_week": "+1 Woche",
   "new.submit": "Umfrage erstellen",
+  "new.label_answer_mode": "Antwortmöglichkeiten",
+  "new.answer_mode_yn": "Ja / Nein",
+  "new.answer_mode_ymn": "Ja / Vielleicht / Nein",
   "new.error_no_title": "Bitte gib einen Titel für die Umfrage ein.",
   "new.error_no_dates": "Bitte füge mindestens eine Terminoption hinzu.",
 
@@ -47,6 +50,7 @@
   "poll.placeholder_name": "Dein Name",
   "poll.aria_available": "Verfügbar am %s",
   "poll.aria_not_available": "Nicht verfügbar am %s",
+  "poll.aria_maybe": "Vielleicht am %s",
   "poll.submit_vote": "Abstimmen",
   "poll.share_title": "Umfrage teilen",
   "poll.share_description": "Sende diesen Link an Teilnehmer, damit sie abstimmen können.",

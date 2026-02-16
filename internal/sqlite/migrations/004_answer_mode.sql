@@ -1,0 +1,1 @@
+ALTER TABLE polls ADD COLUMN answer_mode TEXT NOT NULL DEFAULT 'yn';
