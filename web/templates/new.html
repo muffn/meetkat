@@ -45,10 +45,14 @@
 
                 <div>
                     <input type="hidden" id="answer-mode" name="answer_mode" value="{{if eq .formAnswerMode "ymn"}}ymn{{else}}yn{{end}}">
-                    <label class="mt-1 inline-flex cursor-pointer items-center gap-2 text-sm text-text-700">
-                        <input type="checkbox" id="answer-mode-checkbox" {{if eq .formAnswerMode "ymn"}}checked{{end}}
-                               class="size-4 rounded border-background-300 text-primary-500 focus:ring-2 focus:ring-primary-200">
-                        {{ call $.t "new.label_include_maybe" }}
+                    <label for="answer-mode-checkbox" class="inline-flex cursor-pointer items-center gap-3 rounded-lg border border-background-300 bg-background-50 px-3 py-2.5 transition select-none hover:border-primary-300">
+                        <span class="relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors" id="toggle-track"
+                              style="background-color: {{if eq .formAnswerMode "ymn"}}var(--color-primary-500){{else}}var(--color-background-300){{end}}">
+                            <span class="inline-block size-4 rounded-full bg-white shadow-sm transition-transform" id="toggle-thumb"
+                                  style="transform: translateX({{if eq .formAnswerMode "ymn"}}18px{{else}}2px{{end}})"></span>
+                        </span>
+                        <input type="checkbox" id="answer-mode-checkbox" {{if eq .formAnswerMode "ymn"}}checked{{end}} class="sr-only">
+                        <span class="text-sm font-medium text-text-700">{{ call $.t "new.label_include_maybe" }}</span>
                     </label>
                 </div>
 
@@ -237,9 +241,13 @@ desktopMQ.addEventListener('change', function () {
     document.querySelectorAll('.date-input').forEach(applyMode);
 });
 
-// Answer mode checkbox
+// Answer mode toggle
 document.getElementById('answer-mode-checkbox').addEventListener('change', function () {
     document.getElementById('answer-mode').value = this.checked ? 'ymn' : 'yn';
+    var track = document.getElementById('toggle-track');
+    var thumb = document.getElementById('toggle-thumb');
+    track.style.backgroundColor = this.checked ? 'var(--color-primary-500)' : 'var(--color-background-300)';
+    thumb.style.transform = this.checked ? 'translateX(18px)' : 'translateX(2px)';
 });
 </script>
 {{end}}
