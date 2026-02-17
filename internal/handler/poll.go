@@ -32,6 +32,7 @@ func (h *PollHandler) renderVoteTable(c *gin.Context, p *poll.Poll, isAdmin bool
 		"totals":       totals,
 		"winners":      view.WinningOptions(totals),
 		"isAdmin":      isAdmin,
+		"answerMode":   p.AnswerMode,
 		"headerGroups": view.BuildDateHeaders(p.Options, LocalizerFromCtx(c).T),
 	})
 }
@@ -75,13 +76,16 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 			"formTitle":       title,
 			"formDescription": description,
 			"formDates":       dates,
+			"formAnswerMode":  c.PostForm("answer_mode"),
 		})
 		return
 	}
 
 	sort.Strings(options)
 
-	p, err := h.svc.Create(title, description, options)
+	answerMode := c.PostForm("answer_mode")
+
+	p, err := h.svc.Create(title, description, answerMode, options)
 	if err != nil {
 		log.Printf("create poll error: %v", err)
 		c.String(http.StatusInternalServerError, loc.T("error.generic"))
@@ -120,6 +124,7 @@ func (h *PollHandler) ShowPoll(c *gin.Context) {
 		"winners":      view.WinningOptions(totals),
 		"url":          fmt.Sprintf("%s/poll/%s", c.Request.Host, p.ID),
 		"isAdmin":      false,
+		"answerMode":   p.AnswerMode,
 		"headerGroups": view.BuildDateHeaders(p.Options, loc.T),
 	})
 }
@@ -149,10 +154,7 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 		return
 	}
 
-	responses := make(map[string]bool, len(p.Options))
-	for _, opt := range p.Options {
-		responses[opt] = c.PostForm("vote-"+opt) == "yes"
-	}
+	responses := parseVoteResponses(p.Options, c)
 
 	if err := h.svc.AddVote(id, name, responses); err != nil {
 		log.Printf("add vote error: %v", err)
@@ -198,6 +200,7 @@ func (h *PollHandler) ShowAdmin(c *gin.Context) {
 		"pollURL":      fmt.Sprintf("%s/poll/%s", baseURL, p.ID),
 		"adminURL":     fmt.Sprintf("%s/poll/%s/admin", baseURL, p.AdminID),
 		"isAdmin":      true,
+		"answerMode":   p.AnswerMode,
 		"headerGroups": view.BuildDateHeaders(p.Options, loc.T),
 	})
 }
@@ -227,10 +230,7 @@ func (h *PollHandler) SubmitAdminVote(c *gin.Context) {
 		return
 	}
 
-	responses := make(map[string]bool, len(p.Options))
-	for _, opt := range p.Options {
-		responses[opt] = c.PostForm("vote-"+opt) == "yes"
-	}
+	responses := parseVoteResponses(p.Options, c)
 
 	if err := h.svc.AddVote(p.ID, name, responses); err != nil {
 		log.Printf("add vote error: %v", err)
@@ -334,10 +334,7 @@ func (h *PollHandler) UpdateVote(c *gin.Context) {
 		return
 	}
 
-	responses := make(map[string]bool, len(p.Options))
-	for _, opt := range p.Options {
-		responses[opt] = c.PostForm("vote-"+opt) == "yes"
-	}
+	responses := parseVoteResponses(p.Options, c)
 
 	if err := h.svc.UpdateVote(p.ID, oldName, newName, responses); err != nil {
 		log.Printf("update vote error: %v", err)
@@ -349,4 +346,20 @@ func (h *PollHandler) UpdateVote(c *gin.Context) {
 		return
 	}
 	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+}
+
+// parseVoteResponses reads vote-<option> form values and returns a response map.
+// Valid values are "yes", "maybe", "no"; anything else defaults to "no".
+func parseVoteResponses(options []string, c *gin.Context) map[string]string {
+	responses := make(map[string]string, len(options))
+	for _, opt := range options {
+		val := c.PostForm("vote-" + opt)
+		switch val {
+		case "yes", "maybe":
+			responses[opt] = val
+		default:
+			responses[opt] = "no"
+		}
+	}
+	return responses
 }

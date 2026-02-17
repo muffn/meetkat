@@ -35,6 +35,7 @@
   "new.add_next_day": "+1 Day",
   "new.add_next_week": "+1 Week",
   "new.submit": "Create Poll",
+  "new.label_include_maybe": "Include \"Maybe\" as an answer option",
   "new.error_no_title": "Please enter a poll title.",
   "new.error_no_dates": "Please add at least one date option.",
 
@@ -47,6 +48,7 @@
   "poll.placeholder_name": "Your name",
   "poll.aria_available": "Available on %s",
   "poll.aria_not_available": "Not available on %s",
+  "poll.aria_maybe": "Maybe on %s",
   "poll.submit_vote": "Submit Vote",
   "poll.share_title": "Share this poll",
   "poll.share_description": "Send this link to participants so they can vote.",

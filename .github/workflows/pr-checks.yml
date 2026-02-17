@@ -79,6 +79,11 @@ jobs:
         with:
           node-version: 22
 
+      - name: Install Chrome
+        uses: browser-actions/setup-chrome@v2
+        with:
+          chrome-version: stable
+
       - name: Build CSS
         run: npm ci && npm run build:css
 

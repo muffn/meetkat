@@ -12,8 +12,8 @@ import (
 func TestAdminRemoveVote(t *testing.T) {
 	ts := startTestServer(t)
 	p := seedPoll(t, ts.Svc, "Remove Test", []string{"Mon", "Tue"})
-	_ = ts.Svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
-	_ = ts.Svc.AddVote(p.ID, "Bob", map[string]bool{"Mon": true, "Tue": true})
+	_ = ts.Svc.AddVote(p.ID, "Alice", map[string]string{"Mon": "yes", "Tue": "no"})
+	_ = ts.Svc.AddVote(p.ID, "Bob", map[string]string{"Mon": "yes", "Tue": "yes"})
 	ctx := newBrowserCtx(t)
 
 	var tableHTML string
@@ -55,7 +55,7 @@ func TestAdminRemoveVote(t *testing.T) {
 func TestAdminEditVote(t *testing.T) {
 	ts := startTestServer(t)
 	p := seedPoll(t, ts.Svc, "Edit Test", []string{"Mon", "Tue"})
-	_ = ts.Svc.AddVote(p.ID, "Alice", map[string]bool{"Mon": true, "Tue": false})
+	_ = ts.Svc.AddVote(p.ID, "Alice", map[string]string{"Mon": "yes", "Tue": "no"})
 	ctx := newBrowserCtx(t)
 
 	var tableHTML string
@@ -117,7 +117,7 @@ func TestAdminEditVote(t *testing.T) {
 	if got.Votes[0].Name != "Alicia" {
 		t.Errorf("expected name 'Alicia', got %q", got.Votes[0].Name)
 	}
-	if !got.Votes[0].Responses["Tue"] {
-		t.Error("expected Tue to be true after edit")
+	if got.Votes[0].Responses["Tue"] != "yes" {
+		t.Errorf("expected Tue to be 'yes' after edit, got %q", got.Votes[0].Responses["Tue"])
 	}
 }

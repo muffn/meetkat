@@ -107,7 +107,7 @@ func startTestServer(t *testing.T) *testServer {
 // seedPoll creates a poll via the service and returns it.
 func seedPoll(t *testing.T, svc *poll.Service, title string, options []string) *poll.Poll {
 	t.Helper()
-	p, err := svc.Create(title, "", options)
+	p, err := svc.Create(title, "", "yn", options)
 	if err != nil {
 		t.Fatalf("seedPoll: %v", err)
 	}
