@@ -36,6 +36,7 @@ func prepareResponse(c *gin.Context, code int, data gin.H) {
 	loc := LocalizerFromCtx(c)
 	data["t"] = loc.T
 	data["lang"] = loc.Lang()
+	data["csrf_token"] = c.GetString("csrf_token")
 	c.Status(code)
 	c.Header("Content-Type", "text/html; charset=utf-8")
 }

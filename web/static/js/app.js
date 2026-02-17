@@ -84,7 +84,8 @@
                 document.cookie = 'meetkat_theme=; path=/; max-age=0';
             } else {
                 localStorage.theme = btn.dataset.theme;
-                document.cookie = 'meetkat_theme=' + btn.dataset.theme + '; path=/; max-age=31536000; SameSite=Lax';
+                var secure = location.protocol === 'https:' ? '; Secure' : '';
+                document.cookie = 'meetkat_theme=' + btn.dataset.theme + '; path=/; max-age=31536000; SameSite=Strict' + secure;
             }
             applyTheme();
             updateThemeButtons();
@@ -227,9 +228,10 @@ function initTable() {
         var wrapper = document.getElementById('vote-table-wrapper');
         var scrollLeft = wrapper ? wrapper.scrollLeft : 0;
 
+        var csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
         fetch(url, {
             method: 'POST',
-            headers: { 'X-Requested-With': 'fetch' },
+            headers: { 'X-Requested-With': 'fetch', 'X-CSRF-Token': csrfToken },
             body: formData
         }).then(function (res) {
             if (!res.ok) throw new Error(res.statusText);

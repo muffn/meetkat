@@ -9,14 +9,16 @@
     <link rel="icon" type="image/svg+xml" href="/static/icons/meetkot-head.svg">
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#b8922f">
+    <meta name="csrf-token" content="{{ .csrf_token }}">
     <title>{{block "title" .}}meetkat{{end}}</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <script>
         (function() {
-            var theme = localStorage.theme;
+            var VALID_THEMES = ['light', 'dark', 'system'];
+            var theme = VALID_THEMES.indexOf(localStorage.theme) !== -1 ? localStorage.theme : null;
             if (!theme) {
                 var m = document.cookie.match(/(?:^|;\s*)meetkat_theme=(\w+)/);
-                if (m) { theme = m[1]; localStorage.theme = theme; }
+                if (m && VALID_THEMES.indexOf(m[1]) !== -1) { theme = m[1]; localStorage.theme = theme; }
             }
             document.documentElement.classList.toggle(
                 'dark',

@@ -1,7 +1,6 @@
 package poll
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -15,14 +14,14 @@ func TestCreate(t *testing.T) {
 	if p.ID == "" {
 		t.Fatal("expected non-empty ID")
 	}
-	if len(p.ID) != 8 {
-		t.Fatalf("expected ID length 8, got %d", len(p.ID))
+	if len(p.ID) != 26 {
+		t.Fatalf("expected ID length 26, got %d", len(p.ID))
 	}
 	if p.AdminID == "" {
 		t.Fatal("expected non-empty AdminID")
 	}
-	if len(p.AdminID) != 8 {
-		t.Fatalf("expected AdminID length 8, got %d", len(p.AdminID))
+	if len(p.AdminID) != 26 {
+		t.Fatalf("expected AdminID length 26, got %d", len(p.AdminID))
 	}
 	if p.ID == p.AdminID {
 		t.Error("expected ID and AdminID to be different")
@@ -254,12 +253,14 @@ func TestGenerateID(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(id) != 8 {
-		t.Fatalf("expected ID length 8, got %d", len(id))
+	// 16 bytes → base32 (no padding) → 26 lowercase chars
+	if len(id) != 26 {
+		t.Fatalf("expected ID length 26, got %d", len(id))
 	}
+	// base32 lowercase alphabet: a-z and 2-7
 	for _, c := range id {
-		if !strings.ContainsRune(idChars, c) {
-			t.Errorf("unexpected character %q in ID", c)
+		if !((c >= 'a' && c <= 'z') || (c >= '2' && c <= '7')) {
+			t.Errorf("unexpected character %q in ID (want base32 [a-z2-7])", c)
 		}
 	}
 }

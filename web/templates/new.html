@@ -30,6 +30,7 @@
             {{end}}
 
             <form method="POST" action="/new" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ .csrf_token }}">
                 <div>
                     <label for="title" class="block text-sm font-medium text-text-700">{{ call $.t "new.label_title" }}</label>
                     <input type="text" id="title" name="title" placeholder="{{ call $.t "new.placeholder_title" }}"

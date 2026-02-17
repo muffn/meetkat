@@ -28,6 +28,7 @@
                   data-confirm-incomplete="{{ call .t "poll.confirm_incomplete" }}"
                   data-remove-url="/poll/{{ .poll.AdminID }}/admin/remove"
                   data-edit-url="/poll/{{ .poll.AdminID }}/admin/edit">
+                <input type="hidden" name="csrf_token" value="{{ .csrf_token }}">
                 <div id="vote-table-wrapper" data-scroll-fade class="overflow-x-auto rounded-lg border border-background-200">
                     {{template "vote_table" .}}
                 </div>
@@ -40,8 +41,12 @@
             <!-- External form targets for remove/edit (no-JS fallback) -->
             <noscript>
             {{range $idx, $vote := .poll.Votes}}
-            <form id="remove-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove"></form>
-            <form id="edit-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/edit"></form>
+            <form id="remove-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/remove">
+                <input type="hidden" name="csrf_token" value="{{ $.csrf_token }}">
+            </form>
+            <form id="edit-form-{{$idx}}" method="POST" action="/poll/{{ $.poll.AdminID }}/admin/edit">
+                <input type="hidden" name="csrf_token" value="{{ $.csrf_token }}">
+            </form>
             {{end}}
             </noscript>
 
@@ -91,6 +96,7 @@
                         <p class="text-sm font-medium text-red-800 dark:text-red-300">{{ call .t "admin.delete_confirm_text" }}</p>
                         <div class="mt-3 flex items-center gap-2">
                             <form method="POST" action="/poll/{{ .poll.AdminID }}/admin/delete">
+                                <input type="hidden" name="csrf_token" value="{{ .csrf_token }}">
                                 <button type="submit"
                                         class="rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-red-700">
                                     {{ call .t "admin.delete_confirm" }}
