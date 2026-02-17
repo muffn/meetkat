@@ -71,8 +71,9 @@ func main() {
 	r.POST("/poll/:id/admin/edit", ph.UpdateVote)
 
 	srv := &http.Server{
-		Addr:    ":" + cfg.Port,
-		Handler: r,
+		Addr:              ":" + cfg.Port,
+		Handler:           r,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {
