@@ -2,7 +2,7 @@ package handler
 
 import (
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"meetkat/internal/i18n"
@@ -20,6 +20,26 @@ func isAJAX(c *gin.Context) bool {
 	return c.GetHeader("X-Requested-With") == "fetch"
 }
 
+// respondError sends an AJAX error string or a form redirect, depending on the
+// request type. Always call return after this.
+func respondError(c *gin.Context, code int, msg, redirectURL string) {
+	if isAJAX(c) {
+		c.String(code, msg)
+		return
+	}
+	c.Redirect(http.StatusSeeOther, redirectURL)
+}
+
+// prepareResponse injects locale data into the template data map, sets the HTTP
+// status code, and writes the Content-Type header.
+func prepareResponse(c *gin.Context, code int, data gin.H) {
+	loc := LocalizerFromCtx(c)
+	data["t"] = loc.T
+	data["lang"] = loc.Lang()
+	c.Status(code)
+	c.Header("Content-Type", "text/html; charset=utf-8")
+}
+
 // renderFragment renders only the named fragment (e.g. "vote_table") from the
 // page template, without the base layout wrapper.  Used to return partial HTML
 // for AJAX requests.
@@ -29,13 +49,9 @@ func renderFragment(tmpls map[string]*template.Template, c *gin.Context, pageNam
 		c.String(http.StatusInternalServerError, "template %q not found", pageName)
 		return
 	}
-	loc := LocalizerFromCtx(c)
-	data["t"] = loc.T
-	data["lang"] = loc.Lang()
-	c.Status(http.StatusOK)
-	c.Header("Content-Type", "text/html; charset=utf-8")
+	prepareResponse(c, http.StatusOK, data)
 	if err := tmpl.ExecuteTemplate(c.Writer, fragmentName, data); err != nil {
-		log.Printf("fragment render error: %v", err)
+		slog.Error("fragment render error", "err", err)
 	}
 }
 
@@ -46,12 +62,8 @@ func renderHTML(tmpls map[string]*template.Template, c *gin.Context, code int, n
 		c.String(http.StatusInternalServerError, "template %q not found", name)
 		return
 	}
-	loc := LocalizerFromCtx(c)
-	data["t"] = loc.T
-	data["lang"] = loc.Lang()
-	c.Status(code)
-	c.Header("Content-Type", "text/html; charset=utf-8")
+	prepareResponse(c, code, data)
 	if err := tmpl.ExecuteTemplate(c.Writer, name, data); err != nil {
-		log.Printf("template render error: %v", err)
+		slog.Error("template render error", "err", err)
 	}
 }

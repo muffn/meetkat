@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"sort"
 	"strings"
@@ -22,6 +22,22 @@ type PollHandler struct {
 
 func NewPollHandler(svc *poll.Service, tmpls map[string]*template.Template) *PollHandler {
 	return &PollHandler{svc: svc, tmpls: tmpls}
+}
+
+// respondAfterMutation re-fetches the poll via loadPoll and renders the
+// vote_table fragment for AJAX requests, or redirects for form POSTs.
+func (h *PollHandler) respondAfterMutation(
+	c *gin.Context,
+	loadPoll func() (*poll.Poll, error),
+	isAdmin bool,
+	pageName, redirectURL string,
+) {
+	if isAJAX(c) {
+		p, _ := loadPoll()
+		h.renderVoteTable(c, p, isAdmin, pageName)
+		return
+	}
+	c.Redirect(http.StatusSeeOther, redirectURL)
 }
 
 // renderVoteTable renders only the vote_table fragment for AJAX responses.
@@ -87,7 +103,7 @@ func (h *PollHandler) CreatePoll(c *gin.Context) {
 
 	p, err := h.svc.Create(title, description, answerMode, options)
 	if err != nil {
-		log.Printf("create poll error: %v", err)
+		slog.Error("create poll error", "err", err)
 		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
@@ -101,18 +117,39 @@ func (h *PollHandler) renderNotFound(c *gin.Context) {
 	})
 }
 
+// mustLoadPoll fetches a poll by its public or admin ID. On error or not-found
+// it writes the appropriate response and returns (nil, false), so the caller
+// can simply do:
+//
+//	p, ok := h.mustLoadPoll(c, id, false)
+//	if !ok { return }
+func (h *PollHandler) mustLoadPoll(c *gin.Context, id string, isAdmin bool) (*poll.Poll, bool) {
+	var p *poll.Poll
+	var err error
+	if isAdmin {
+		p, err = h.svc.GetByAdminID(id)
+	} else {
+		p, err = h.svc.Get(id)
+	}
+	if err != nil {
+		slog.Error("load poll error", "err", err)
+		loc := LocalizerFromCtx(c)
+		c.String(http.StatusInternalServerError, loc.T("error.generic"))
+		return nil, false
+	}
+	if p == nil {
+		h.renderNotFound(c)
+		return nil, false
+	}
+	return p, true
+}
+
 func (h *PollHandler) ShowPoll(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
 	id := c.Param("id")
 
-	p, err := h.svc.Get(id)
-	if err != nil {
-		log.Printf("get poll error: %v", err)
-		c.String(http.StatusInternalServerError, loc.T("error.generic"))
-		return
-	}
-	if p == nil {
-		h.renderNotFound(c)
+	p, ok := h.mustLoadPoll(c, id, false)
+	if !ok {
 		return
 	}
 
@@ -133,55 +170,34 @@ func (h *PollHandler) SubmitVote(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
 	id := c.Param("id")
 
-	p, err := h.svc.Get(id)
-	if err != nil {
-		log.Printf("get poll error: %v", err)
-		c.String(http.StatusInternalServerError, loc.T("error.generic"))
-		return
-	}
-	if p == nil {
-		h.renderNotFound(c)
+	p, ok := h.mustLoadPoll(c, id, false)
+	if !ok {
 		return
 	}
 
 	name := strings.TrimSpace(c.PostForm("name"))
 	if name == "" {
-		if isAJAX(c) {
-			c.String(http.StatusBadRequest, "name required")
-			return
-		}
-		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", id))
+		respondError(c, http.StatusBadRequest, "name required", fmt.Sprintf("/poll/%s", id))
 		return
 	}
 
 	responses := parseVoteResponses(p.Options, c)
 
 	if err := h.svc.AddVote(id, name, responses); err != nil {
-		log.Printf("add vote error: %v", err)
+		slog.Error("add vote error", "err", err)
 		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
 
-	if isAJAX(c) {
-		p, _ = h.svc.Get(id)
-		h.renderVoteTable(c, p, false, "poll.html")
-		return
-	}
-	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s", id))
+	h.respondAfterMutation(c, func() (*poll.Poll, error) { return h.svc.Get(id) }, false, "poll.html", fmt.Sprintf("/poll/%s", id))
 }
 
 func (h *PollHandler) ShowAdmin(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
-	p, err := h.svc.GetByAdminID(adminID)
-	if err != nil {
-		log.Printf("get poll by admin id error: %v", err)
-		c.String(http.StatusInternalServerError, loc.T("error.generic"))
-		return
-	}
-	if p == nil {
-		h.renderNotFound(c)
+	p, ok := h.mustLoadPoll(c, adminID, true)
+	if !ok {
 		return
 	}
 
@@ -209,97 +225,60 @@ func (h *PollHandler) SubmitAdminVote(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
-	p, err := h.svc.GetByAdminID(adminID)
-	if err != nil {
-		log.Printf("get poll by admin id error: %v", err)
-		c.String(http.StatusInternalServerError, loc.T("error.generic"))
-		return
-	}
-	if p == nil {
-		h.renderNotFound(c)
+	p, ok := h.mustLoadPoll(c, adminID, true)
+	if !ok {
 		return
 	}
 
 	name := strings.TrimSpace(c.PostForm("name"))
 	if name == "" {
-		if isAJAX(c) {
-			c.String(http.StatusBadRequest, "name required")
-			return
-		}
-		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+		respondError(c, http.StatusBadRequest, "name required", fmt.Sprintf("/poll/%s/admin", adminID))
 		return
 	}
 
 	responses := parseVoteResponses(p.Options, c)
 
 	if err := h.svc.AddVote(p.ID, name, responses); err != nil {
-		log.Printf("add vote error: %v", err)
+		slog.Error("add vote error", "err", err)
 		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
 
-	if isAJAX(c) {
-		p, _ = h.svc.GetByAdminID(adminID)
-		h.renderVoteTable(c, p, true, "admin.html")
-		return
-	}
-	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+	h.respondAfterMutation(c, func() (*poll.Poll, error) { return h.svc.GetByAdminID(adminID) }, true, "admin.html", fmt.Sprintf("/poll/%s/admin", adminID))
 }
 
 func (h *PollHandler) RemoveVote(c *gin.Context) {
-	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
-	p, err := h.svc.GetByAdminID(adminID)
-	if err != nil {
-		log.Printf("get poll by admin id error: %v", err)
-		c.String(http.StatusInternalServerError, loc.T("error.generic"))
-		return
-	}
-	if p == nil {
-		h.renderNotFound(c)
+	p, ok := h.mustLoadPoll(c, adminID, true)
+	if !ok {
 		return
 	}
 
 	voterName := strings.TrimSpace(c.PostForm("voter_name"))
 	if voterName == "" {
-		if isAJAX(c) {
-			c.String(http.StatusBadRequest, "voter_name required")
-			return
-		}
-		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+		respondError(c, http.StatusBadRequest, "voter_name required", fmt.Sprintf("/poll/%s/admin", adminID))
 		return
 	}
 
 	if err := h.svc.RemoveVote(p.ID, voterName); err != nil {
-		log.Printf("remove vote error: %v", err)
+		slog.Error("remove vote error", "err", err)
 	}
 
-	if isAJAX(c) {
-		p, _ = h.svc.GetByAdminID(adminID)
-		h.renderVoteTable(c, p, true, "admin.html")
-		return
-	}
-	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+	h.respondAfterMutation(c, func() (*poll.Poll, error) { return h.svc.GetByAdminID(adminID) }, true, "admin.html", fmt.Sprintf("/poll/%s/admin", adminID))
 }
 
 func (h *PollHandler) DeletePoll(c *gin.Context) {
 	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
-	p, err := h.svc.GetByAdminID(adminID)
-	if err != nil {
-		log.Printf("get poll by admin id error: %v", err)
-		c.String(http.StatusInternalServerError, loc.T("error.generic"))
-		return
-	}
-	if p == nil {
-		h.renderNotFound(c)
+	p, ok := h.mustLoadPoll(c, adminID, true)
+	if !ok {
 		return
 	}
 
 	if err := h.svc.Delete(p.ID); err != nil {
-		log.Printf("delete poll error: %v", err)
+		slog.Error("delete poll error", "err", err)
 		c.String(http.StatusInternalServerError, loc.T("error.generic"))
 		return
 	}
@@ -308,17 +287,10 @@ func (h *PollHandler) DeletePoll(c *gin.Context) {
 }
 
 func (h *PollHandler) UpdateVote(c *gin.Context) {
-	loc := LocalizerFromCtx(c)
 	adminID := c.Param("id")
 
-	p, err := h.svc.GetByAdminID(adminID)
-	if err != nil {
-		log.Printf("get poll by admin id error: %v", err)
-		c.String(http.StatusInternalServerError, loc.T("error.generic"))
-		return
-	}
-	if p == nil {
-		h.renderNotFound(c)
+	p, ok := h.mustLoadPoll(c, adminID, true)
+	if !ok {
 		return
 	}
 
@@ -326,26 +298,17 @@ func (h *PollHandler) UpdateVote(c *gin.Context) {
 	newName := strings.TrimSpace(c.PostForm("name"))
 
 	if newName == "" {
-		if isAJAX(c) {
-			c.String(http.StatusBadRequest, "name required")
-			return
-		}
-		c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+		respondError(c, http.StatusBadRequest, "name required", fmt.Sprintf("/poll/%s/admin", adminID))
 		return
 	}
 
 	responses := parseVoteResponses(p.Options, c)
 
 	if err := h.svc.UpdateVote(p.ID, oldName, newName, responses); err != nil {
-		log.Printf("update vote error: %v", err)
+		slog.Error("update vote error", "err", err)
 	}
 
-	if isAJAX(c) {
-		p, _ = h.svc.GetByAdminID(adminID)
-		h.renderVoteTable(c, p, true, "admin.html")
-		return
-	}
-	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/poll/%s/admin", adminID))
+	h.respondAfterMutation(c, func() (*poll.Poll, error) { return h.svc.GetByAdminID(adminID) }, true, "admin.html", fmt.Sprintf("/poll/%s/admin", adminID))
 }
 
 // parseVoteResponses reads vote-<option> form values and returns a response map.
