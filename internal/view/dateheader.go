@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const dateLayout = "2006-01-02"
+
 // HeaderColumn represents a single column in the vote table header.
 type HeaderColumn struct {
 	Raw   string // original option string (used for form keys)
@@ -29,7 +31,7 @@ func BuildDateHeaders(options []string, tFunc func(string, ...any) string) []Hea
 	var groups []HeaderGroup
 
 	for _, opt := range options {
-		t, err := time.Parse("2006-01-02", opt)
+		t, err := time.Parse(dateLayout, opt)
 		if err != nil {
 			// Non-date option: standalone group
 			groups = append(groups, HeaderGroup{

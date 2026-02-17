@@ -19,7 +19,8 @@ func NewHomeHandler(tmpls map[string]*template.Template) *HomeHandler {
 
 // ShowHome renders the index / hero page.
 func (h *HomeHandler) ShowHome(c *gin.Context) {
+	loc := LocalizerFromCtx(c)
 	renderHTML(h.tmpls, c, http.StatusOK, "index.html", gin.H{
-		"title": "meetkat",
+		"title": loc.T("home.page_title"),
 	})
 }

@@ -17,41 +17,74 @@ func NewPollRepository(db *sql.DB) *PollRepository {
 	return &PollRepository{db: db}
 }
 
-func (r *PollRepository) Create(p *poll.Poll) error {
+// withTx begins a transaction, passes it to fn, and commits on success.
+// The deferred rollback is a no-op after a successful commit.
+func (r *PollRepository) withTx(fn func(*sql.Tx) error) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return fmt.Errorf("begin tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-
-	answerMode := p.AnswerMode
-	if answerMode == "" {
-		answerMode = "yn"
+	if err := fn(tx); err != nil {
+		return err
 	}
-	res, err := tx.Exec(
-		"INSERT INTO polls (public_id, admin_id, title, description, created_at, answer_mode) VALUES (?, ?, ?, ?, ?, ?)",
-		p.ID, p.AdminID, p.Title, p.Description, p.CreatedAt.UTC().Format(time.RFC3339), answerMode,
-	)
+	return tx.Commit()
+}
+
+// loadOptionIDsByLabel queries all options for a poll (by internal row ID) and
+// returns a map from label to option row ID, for use within a transaction.
+func loadOptionIDsByLabel(tx *sql.Tx, pollRowID int64) (map[string]int64, error) {
+	rows, err := tx.Query("SELECT id, label FROM poll_options WHERE poll_id = ?", pollRowID)
 	if err != nil {
-		return fmt.Errorf("insert poll: %w", err)
+		return nil, fmt.Errorf("query options: %w", err)
 	}
+	defer func() { _ = rows.Close() }()
 
-	pollRowID, err := res.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("last insert id: %w", err)
+	m := make(map[string]int64)
+	for rows.Next() {
+		var id int64
+		var label string
+		if err := rows.Scan(&id, &label); err != nil {
+			return nil, fmt.Errorf("scan option: %w", err)
+		}
+		m[label] = id
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate options: %w", err)
+	}
+	return m, nil
+}
 
-	for i, label := range p.Options {
-		_, err := tx.Exec(
-			"INSERT INTO poll_options (poll_id, label, position) VALUES (?, ?, ?)",
-			pollRowID, label, i,
+func (r *PollRepository) Create(p *poll.Poll) error {
+	return r.withTx(func(tx *sql.Tx) error {
+		answerMode := p.AnswerMode
+		if answerMode == "" {
+			answerMode = poll.AnswerModeYN
+		}
+		res, err := tx.Exec(
+			"INSERT INTO polls (public_id, admin_id, title, description, created_at, answer_mode) VALUES (?, ?, ?, ?, ?, ?)",
+			p.ID, p.AdminID, p.Title, p.Description, p.CreatedAt.UTC().Format(time.RFC3339), answerMode,
 		)
 		if err != nil {
-			return fmt.Errorf("insert option %q: %w", label, err)
+			return fmt.Errorf("insert poll: %w", err)
 		}
-	}
 
-	return tx.Commit()
+		pollRowID, err := res.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("last insert id: %w", err)
+		}
+
+		for i, label := range p.Options {
+			_, err := tx.Exec(
+				"INSERT INTO poll_options (poll_id, label, position) VALUES (?, ?, ?)",
+				pollRowID, label, i,
+			)
+			if err != nil {
+				return fmt.Errorf("insert option %q: %w", label, err)
+			}
+		}
+		return nil
+	})
 }
 
 func (r *PollRepository) GetByPublicID(publicID string) (*poll.Poll, error) {
@@ -194,68 +227,48 @@ func (r *PollRepository) RemoveVote(pollID string, voterName string) error {
 }
 
 func (r *PollRepository) AddVote(pollID string, vote poll.Vote) error {
-	tx, err := r.db.Begin()
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	defer func() { _ = tx.Rollback() }()
-
-	// Get the internal poll row ID.
-	var rowID int64
-	err = tx.QueryRow("SELECT id FROM polls WHERE public_id = ?", pollID).Scan(&rowID)
-	if err == sql.ErrNoRows {
-		return fmt.Errorf("poll not found")
-	}
-	if err != nil {
-		return fmt.Errorf("query poll id: %w", err)
-	}
-
-	// Insert the vote.
-	res, err := tx.Exec("INSERT INTO votes (poll_id, name) VALUES (?, ?)", rowID, vote.Name)
-	if err != nil {
-		return fmt.Errorf("insert vote: %w", err)
-	}
-	voteID, err := res.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("last insert id: %w", err)
-	}
-
-	// Load option IDs for this poll, keyed by label.
-	optRows, err := tx.Query("SELECT id, label FROM poll_options WHERE poll_id = ?", rowID)
-	if err != nil {
-		return fmt.Errorf("query options: %w", err)
-	}
-	defer func() { _ = optRows.Close() }()
-
-	optionIDByLabel := make(map[string]int64)
-	for optRows.Next() {
-		var id int64
-		var label string
-		if err := optRows.Scan(&id, &label); err != nil {
-			return fmt.Errorf("scan option: %w", err)
+	return r.withTx(func(tx *sql.Tx) error {
+		// Get the internal poll row ID.
+		var rowID int64
+		err := tx.QueryRow("SELECT id FROM polls WHERE public_id = ?", pollID).Scan(&rowID)
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("poll not found")
 		}
-		optionIDByLabel[label] = id
-	}
-	if err := optRows.Err(); err != nil {
-		return fmt.Errorf("iterate options: %w", err)
-	}
-
-	// Insert vote responses.
-	for label, value := range vote.Responses {
-		optID, ok := optionIDByLabel[label]
-		if !ok {
-			continue
-		}
-		_, err := tx.Exec(
-			"INSERT INTO vote_responses (vote_id, option_id, available) VALUES (?, ?, ?)",
-			voteID, optID, availableStringToInt(value),
-		)
 		if err != nil {
-			return fmt.Errorf("insert response for %q: %w", label, err)
+			return fmt.Errorf("query poll id: %w", err)
 		}
-	}
 
-	return tx.Commit()
+		// Insert the vote.
+		res, err := tx.Exec("INSERT INTO votes (poll_id, name) VALUES (?, ?)", rowID, vote.Name)
+		if err != nil {
+			return fmt.Errorf("insert vote: %w", err)
+		}
+		voteID, err := res.LastInsertId()
+		if err != nil {
+			return fmt.Errorf("last insert id: %w", err)
+		}
+
+		optionIDByLabel, err := loadOptionIDsByLabel(tx, rowID)
+		if err != nil {
+			return err
+		}
+
+		// Insert vote responses.
+		for label, value := range vote.Responses {
+			optID, ok := optionIDByLabel[label]
+			if !ok {
+				continue
+			}
+			_, err := tx.Exec(
+				"INSERT INTO vote_responses (vote_id, option_id, available) VALUES (?, ?, ?)",
+				voteID, optID, availableStringToInt(value),
+			)
+			if err != nil {
+				return fmt.Errorf("insert response for %q: %w", label, err)
+			}
+		}
+		return nil
+	})
 }
 
 func (r *PollRepository) Delete(pollID string) error {
@@ -274,74 +287,54 @@ func (r *PollRepository) Delete(pollID string) error {
 }
 
 func (r *PollRepository) UpdateVote(pollID string, oldName string, vote poll.Vote) error {
-	tx, err := r.db.Begin()
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	defer func() { _ = tx.Rollback() }()
-
-	// Get the internal poll row ID.
-	var rowID int64
-	err = tx.QueryRow("SELECT id FROM polls WHERE public_id = ?", pollID).Scan(&rowID)
-	if err == sql.ErrNoRows {
-		return fmt.Errorf("poll not found")
-	}
-	if err != nil {
-		return fmt.Errorf("query poll id: %w", err)
-	}
-
-	// Find the existing vote row ID (preserves id and voted_at).
-	var voteID int64
-	err = tx.QueryRow("SELECT id FROM votes WHERE poll_id = ? AND name = ?", rowID, oldName).Scan(&voteID)
-	if err == sql.ErrNoRows {
-		return fmt.Errorf("vote not found")
-	}
-	if err != nil {
-		return fmt.Errorf("query vote id: %w", err)
-	}
-
-	// Update the voter name and mark as edited, preserving id and voted_at.
-	_, err = tx.Exec("UPDATE votes SET name = ?, edited_at = datetime('now') WHERE id = ?", vote.Name, voteID)
-	if err != nil {
-		return fmt.Errorf("update vote: %w", err)
-	}
-
-	// Load option IDs for this poll, keyed by label.
-	optRows, err := tx.Query("SELECT id, label FROM poll_options WHERE poll_id = ?", rowID)
-	if err != nil {
-		return fmt.Errorf("query options: %w", err)
-	}
-	defer func() { _ = optRows.Close() }()
-
-	optionIDByLabel := make(map[string]int64)
-	for optRows.Next() {
-		var id int64
-		var label string
-		if err := optRows.Scan(&id, &label); err != nil {
-			return fmt.Errorf("scan option: %w", err)
+	return r.withTx(func(tx *sql.Tx) error {
+		// Get the internal poll row ID.
+		var rowID int64
+		err := tx.QueryRow("SELECT id FROM polls WHERE public_id = ?", pollID).Scan(&rowID)
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("poll not found")
 		}
-		optionIDByLabel[label] = id
-	}
-	if err := optRows.Err(); err != nil {
-		return fmt.Errorf("iterate options: %w", err)
-	}
-
-	// Upsert vote responses.
-	for label, value := range vote.Responses {
-		optID, ok := optionIDByLabel[label]
-		if !ok {
-			continue
-		}
-		_, err := tx.Exec(
-			"INSERT INTO vote_responses (vote_id, option_id, available) VALUES (?, ?, ?) ON CONFLICT(vote_id, option_id) DO UPDATE SET available = excluded.available",
-			voteID, optID, availableStringToInt(value),
-		)
 		if err != nil {
-			return fmt.Errorf("upsert response for %q: %w", label, err)
+			return fmt.Errorf("query poll id: %w", err)
 		}
-	}
 
-	return tx.Commit()
+		// Find the existing vote row ID (preserves id and voted_at).
+		var voteID int64
+		err = tx.QueryRow("SELECT id FROM votes WHERE poll_id = ? AND name = ?", rowID, oldName).Scan(&voteID)
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("vote not found")
+		}
+		if err != nil {
+			return fmt.Errorf("query vote id: %w", err)
+		}
+
+		// Update the voter name and mark as edited, preserving id and voted_at.
+		_, err = tx.Exec("UPDATE votes SET name = ?, edited_at = datetime('now') WHERE id = ?", vote.Name, voteID)
+		if err != nil {
+			return fmt.Errorf("update vote: %w", err)
+		}
+
+		optionIDByLabel, err := loadOptionIDsByLabel(tx, rowID)
+		if err != nil {
+			return err
+		}
+
+		// Upsert vote responses.
+		for label, value := range vote.Responses {
+			optID, ok := optionIDByLabel[label]
+			if !ok {
+				continue
+			}
+			_, err := tx.Exec(
+				"INSERT INTO vote_responses (vote_id, option_id, available) VALUES (?, ?, ?) ON CONFLICT(vote_id, option_id) DO UPDATE SET available = excluded.available",
+				voteID, optID, availableStringToInt(value),
+			)
+			if err != nil {
+				return fmt.Errorf("upsert response for %q: %w", label, err)
+			}
+		}
+		return nil
+	})
 }
 
 // availableStringToInt maps response strings to DB integers: "yes"->1, "maybe"->2, else->0.

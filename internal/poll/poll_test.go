@@ -250,7 +250,10 @@ func TestRemoveVoteNotFound(t *testing.T) {
 }
 
 func TestGenerateID(t *testing.T) {
-	id := generateID()
+	id, err := generateID()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(id) != 8 {
 		t.Fatalf("expected ID length 8, got %d", len(id))
 	}

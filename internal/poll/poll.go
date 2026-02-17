@@ -38,18 +38,21 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func generateID() string {
+func generateID() (string, error) {
 	b := make([]byte, 8)
 	if _, err := rand.Read(b); err != nil {
-		panic(fmt.Sprintf("crypto/rand failed: %v", err))
+		return "", fmt.Errorf("crypto/rand failed: %w", err)
 	}
 	for i := range b {
 		b[i] = idChars[b[i]%byte(len(idChars))]
 	}
-	return string(b)
+	return string(b), nil
 }
 
 const (
+	AnswerModeYN  = "yn"
+	AnswerModeYMN = "ymn"
+
 	MaxTitleLen       = 200
 	MaxDescriptionLen = 2000
 	MaxNameLen        = 100
@@ -66,13 +69,22 @@ func (s *Service) Create(title, description, answerMode string, options []string
 	if len(options) > MaxOptions {
 		return nil, fmt.Errorf("too many options (max %d)", MaxOptions)
 	}
-	if answerMode != "yn" && answerMode != "ymn" {
-		answerMode = "yn"
+	if answerMode != AnswerModeYN && answerMode != AnswerModeYMN {
+		answerMode = AnswerModeYN
+	}
+
+	id, err := generateID()
+	if err != nil {
+		return nil, fmt.Errorf("generate poll id: %w", err)
+	}
+	adminID, err := generateID()
+	if err != nil {
+		return nil, fmt.Errorf("generate admin id: %w", err)
 	}
 
 	p := &Poll{
-		ID:          generateID(),
-		AdminID:     generateID(),
+		ID:          id,
+		AdminID:     adminID,
 		Title:       title,
 		Description: description,
 		AnswerMode:  answerMode,
