@@ -259,7 +259,7 @@ func TestGenerateID(t *testing.T) {
 	}
 	// base32 lowercase alphabet: a-z and 2-7
 	for _, c := range id {
-		if !((c >= 'a' && c <= 'z') || (c >= '2' && c <= '7')) {
+		if (c < 'a' || c > 'z') && (c < '2' || c > '7') {
 			t.Errorf("unexpected character %q in ID (want base32 [a-z2-7])", c)
 		}
 	}
