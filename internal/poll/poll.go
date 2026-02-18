@@ -2,12 +2,12 @@ package poll
 
 import (
 	"crypto/rand"
+	"encoding/base32"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 )
-
-const idChars = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 type Vote struct {
 	Name      string
@@ -38,15 +38,16 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
+// generateID returns a 26-character lowercase base32 string with 128-bit entropy.
+// 16 random bytes → base32 (no padding) → 26 chars, zero modulo bias.
 func generateID() (string, error) {
-	b := make([]byte, 8)
+	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
 		return "", fmt.Errorf("crypto/rand failed: %w", err)
 	}
-	for i := range b {
-		b[i] = idChars[b[i]%byte(len(idChars))]
-	}
-	return string(b), nil
+	return strings.ToLower(
+		base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(b),
+	), nil
 }
 
 const (

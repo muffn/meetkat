@@ -85,6 +85,16 @@ func New() (*Translator, error) {
 	}, nil
 }
 
+// IsSupported reports whether lang is a known supported language code.
+func (t *Translator) IsSupported(lang string) bool {
+	for _, s := range t.supported {
+		if s == lang {
+			return true
+		}
+	}
+	return false
+}
+
 // ForLang returns a Localizer for the best-matching language.
 func (t *Translator) ForLang(lang string) *Localizer {
 	tag, err := language.Parse(lang)
