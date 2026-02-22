@@ -9,6 +9,6 @@
     "test:all": "go test -tags e2e ./..."
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.0.0"
+    "@tailwindcss/cli": "^4.2.0"
   }
 }
